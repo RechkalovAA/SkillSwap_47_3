@@ -1,0 +1,125 @@
+.container {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+}
+
+.content {
+  display: flex;
+  flex-direction: column;
+  gap: 40px;
+  width: 460px;
+  margin-top: 100px;
+  margin-bottom: 84px;
+}
+
+/* Картинка */
+.image-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 460px;
+  height: 304px;
+}
+
+.error-image {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}
+
+/* Текстовый блок */
+.text-block {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  width: 460px;
+}
+
+.subtitle {
+  width: 460px;
+  margin: 0;
+  font-family: Jost, sans-serif;
+  font-size: 24px;
+  font-weight: 500;
+  line-height: 28px;
+  color: #253017;
+  text-align: center;
+  letter-spacing: -1.1%;
+}
+
+.description {
+  width: 460px;
+  margin: 0;
+  font-family: Roboto, sans-serif;
+  font-size: 16px;
+  font-weight: 400;
+  line-height: 24px;
+  color: #253017;
+  text-align: center;
+  letter-spacing: 2%;
+}
+
+/* Кнопки */
+.buttons {
+  display: flex;
+  gap: 24px;
+  justify-content: space-between;
+  width: 460px;
+}
+
+.button-primary {
+  box-sizing: border-box;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  justify-content: center;
+  width: 218px;
+  height: 48px;
+  padding: 12px 24px;
+  font-family: Roboto, sans-serif;
+  font-size: 16px;
+  font-weight: 400;
+  line-height: 24px;
+  color: #0c0c0c;
+  text-align: center;
+  letter-spacing: 2%;
+  text-decoration: none;
+  cursor: pointer;
+  background-color: #abd27a;
+  border: none;
+  border-radius: 12px;
+  transition: opacity 0.2s ease;
+}
+
+.button-primary:hover {
+  opacity: 0.9;
+}
+
+.button-secondary {
+  box-sizing: border-box;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  justify-content: center;
+  width: 218px;
+  height: 48px;
+  padding: 12px 24px;
+  font-family: Roboto, sans-serif;
+  font-size: 16px;
+  font-weight: 400;
+  line-height: 24px;
+  color: #0c0c0c;
+  text-align: center;
+  letter-spacing: 2%;
+  cursor: pointer;
+  background-color: #fff;
+  border: 1px solid #abd27a;
+  border-radius: 12px;
+  transition: all 0.2s ease;
+}
+
+.button-secondary:hover {
+  color: #0c0c0c;
+  background-color: #abd27a;
+}

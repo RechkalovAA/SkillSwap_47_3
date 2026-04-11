@@ -1,0 +1,143 @@
+/* SkillCard.module.css
+ * Стили для карточки навыка
+ * Полная версия (variant="default") и компактная (variant="compact")
+ */
+
+/* ===== ПОЛНАЯ ВЕРСИЯ (для главной страницы) ===== */
+.skill-card-full {
+  padding: var(--spacing-xl, 28px);
+  background-color: var(--color-bg, #fff);
+  border-radius: var(--radius-sm, 12px);
+  box-shadow: var(--shadow-sm, 0 2px 8px rgb(0 0 0 / 8%));
+}
+
+.skill-card-avatar-wrapper {
+  display: flex;
+  gap: var(--spacing-sm, 12px);
+  align-items: center;
+  margin-bottom: var(--spacing-md, 16px);
+}
+
+.skill-card-text {
+  flex: 1;
+}
+
+.skill-card-name-full {
+  margin: 0 0 var(--spacing-4px, 4px) 0;
+  font-family: var(--font-family-heading, 'Jost', sans-serif);
+  font-size: 24px;
+  font-weight: var(--font-weight-medium, 500);
+  line-height: 1.2;
+  color: var(--color-text, #1a1a1a);
+}
+
+.skill-card-location-full {
+  margin: 0;
+  font-family: var(--font-family-body, 'Roboto', sans-serif);
+  font-size: var(--font-size-caption, 12px);
+  color: var(--color-text-caption, #6c757d);
+}
+
+.skill-card-bio {
+  padding-top: var(--spacing-20px, 20px);
+  margin: 0 0 var(--spacing-md, 16px) 0;
+  font-family: var(--font-family-body);
+  font-size: var(--font-size-body, 14px);
+  line-height: var(--line-height-body, 1.5);
+  color: var(--color-text-secondary, #444);
+  text-align: left;
+  border-top: 1px solid var(--color-border-light, #e9ecef);
+}
+
+/* Блок навыков (общий для обеих версий) */
+.skill-card-skills-block {
+  margin-bottom: var(--spacing-md, 16px);
+}
+
+.skill-card-section-title {
+  margin: var(--spacing-md, 16px) 0 0 0;
+  font-family: var(--font-family-heading);
+  font-size: 16px;
+  font-weight: var(--font-weight-medium, 500);
+  color: var(--color-text-secondary, #555);
+  text-align: left;
+}
+
+.skill-card-skills-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-14px, 14px);
+  align-items: center;
+  margin-top: var(--spacing-xs, 8px);
+}
+
+.skill-card-skill-text {
+  display: flex;
+  align-items: center;
+}
+
+/* ===== КОМПАКТНАЯ ВЕРСИЯ (для похожих предложений) ===== */
+.skill-card-compact {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  padding: var(--spacing-lg, 20px);
+  background-color: var(--color-bg, #fff);
+  border-radius: var(--radius-md, 12px);
+  box-shadow: var(--shadow-sm, 0 2px 8px rgb(0 0 0 / 8%));
+  transition:
+    transform var(--transition-default, 0.2s ease),
+    box-shadow var(--transition-default);
+}
+
+.skill-card-compact:hover {
+  transform: translateY(-4px);
+  /* stylelint-disable-next-line order/properties-order */
+  box-shadow: var(--shadow-md, 0 8px 20px rgb(0 0 0 / 12%));
+}
+
+.skill-card-header {
+  display: flex;
+  gap: var(--spacing-md, 16px);
+  align-items: center;
+  margin-bottom: var(--spacing-md, 16px);
+}
+
+.skill-card-info {
+  flex: 1;
+}
+
+.skill-card-name {
+  margin: 0 0 var(--spacing-xs, 4px) 0;
+  font-family: var(--font-family-heading);
+  font-size: 18px;
+  font-weight: var(--font-weight-medium, 500);
+  color: var(--color-text, #1a1a1a);
+}
+
+.skill-card-location {
+  margin: 0;
+  font-family: var(--font-family-body);
+  font-size: var(--font-size-caption, 13px);
+  color: var(--color-text-caption, #6c757d);
+}
+
+.skill-card-button {
+  width: 100%;
+  margin-top: auto;
+}
+
+/* Адаптивность компактной версии */
+@media (width <= 480px) {
+  .skill-card-compact {
+    padding: var(--spacing-md, 16px);
+  }
+
+  .skill-card-header {
+    gap: var(--spacing-sm, 12px);
+  }
+
+  .skill-card-name {
+    font-size: 16px;
+  }
+}

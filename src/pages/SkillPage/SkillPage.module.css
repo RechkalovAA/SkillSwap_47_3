@@ -1,0 +1,276 @@
+/* SkillPage.module.css
+ * Двухколоночный макет: колонка 1 (320px) — профиль и навыки (теперь в SkillCard)
+ * колонка 2 (1fr) — внутренний грид 3 колонки: описание | главное фото | вертикальная карусель
+ */
+
+/* ===== Контейнеры ===== */
+.skill-page {
+  min-height: 100vh;
+  background-color: var(--color-bg-secondary, #f5f5f5);
+}
+
+.skill-page-container {
+  max-width: 1400px;
+  padding: var(--spacing-2xl, 32px) var(--spacing-lg, 24px);
+  margin: 0 auto;
+}
+
+/* ===== ОСНОВНАЯ СЕТКА (2 колонки: 320px | 1fr) ===== */
+.skill-page-main-grid {
+  display: grid;
+  grid-template-columns: 320px 1fr;
+  gap: var(--spacing-xl, 32px);
+  margin-bottom: var(--spacing-2xl, 48px);
+}
+
+/* ===== ЛЕВАЯ КОЛОНКА (320px) ===== */
+.skill-page-left {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-lg, 24px);
+}
+
+/* ===== ПРАВАЯ КОЛОНКА (1fr) — ВНУТРЕННИЙ ГРИД 3 КОЛОНКИ ===== */
+.skill-page-right {
+  display: grid;
+  grid-template-columns: 1fr 1fr 94px;
+  gap: var(--spacing-lg, 24px);
+}
+
+/* ===== КОЛОНКА 2A — ОПИСАНИЕ НАВЫКА ===== */
+.skill-page-description-block {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md, 16px);
+  justify-content: space-between;
+}
+
+.skill-page-skill-text {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-4px);
+}
+
+.skill-page-skill-name {
+  margin: 0;
+  font-family: var(--font-family-heading);
+  font-size: var(--font-size-h1, 28px);
+  font-weight: var(--font-weight-medium, 500);
+  color: var(--color-text, #1a1a1a);
+}
+
+.skill-page-skill-category {
+  display: inline-block;
+  font-family: var(--font-family-body);
+  font-size: var(--font-size-caption, 12px);
+  color: var(--color-text-caption, #69735d);
+  border-radius: var(--radius-sm, 8px);
+}
+
+.skill-page-skill-description {
+  margin-top: var(--spacing-16px, 16px);
+  font-family: var(--font-family-body);
+  font-size: var(--font-size-body, 16px);
+  line-height: var(--line-height-body, 1.5);
+  color: var(--color-text-secondary, #444);
+}
+
+.skill-page-exchange-button {
+  width: 100%;
+  margin-top: var(--spacing-sm, 12px);
+}
+
+.skill-page-exchange-full-width {
+  display: block;
+  width: 100%;
+}
+
+/* ===== КОЛОНКА 2B — ГЛАВНОЕ ФОТО ===== */
+.skill-page-main-photo {
+  overflow: hidden;
+  background-color: var(--color-bg, #fff);
+  border-radius: var(--radius-sm, 12px);
+  box-shadow: var(--shadow-sm, 0 2px 8px rgb(0 0 0 / 8%));
+}
+
+.skill-page-main-photo-image {
+  display: block;
+  width: 100%;
+  object-fit: cover;
+}
+
+/* ===== КОЛОНКА 2C — ВЕРТИКАЛЬНАЯ КАРУСЕЛЬ ФОТО ===== */
+.skill-page-vertical-carousel {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+  background-color: var(--color-bg, #fff);
+  border-radius: var(--radius-sm, 12px);
+  box-shadow: var(--shadow-sm, 0 2px 8px rgb(0 0 0 / 8%));
+}
+
+.skill-page-carousel-container {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md, 16px);
+  max-height: 540px;
+  padding: var(--spacing-4px, 4px);
+  overflow-y: auto;
+  scroll-behavior: smooth;
+}
+
+.skill-page-carousel-container::-webkit-scrollbar {
+  width: 4px;
+}
+
+.skill-page-carousel-container::-webkit-scrollbar-track {
+  background: var(--color-border-light, #e9ecef);
+  border-radius: 4px;
+}
+
+.skill-page-carousel-container::-webkit-scrollbar-thumb {
+  background: var(--color-accent, #1976d2);
+  border-radius: 4px;
+}
+
+.skill-page-carousel-item {
+  flex-shrink: 0;
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  cursor: pointer;
+  object-fit: cover;
+  border-radius: var(--radius-md, 12px);
+  transition:
+    transform var(--transition-default, 0.2s ease),
+    opacity var(--transition-default);
+}
+
+.skill-page-carousel-item:hover {
+  opacity: 0.85;
+  transform: scale(1.02);
+}
+
+/* ===== Похожие предложения ===== */
+.skill-page-related-section {
+  padding-top: var(--spacing-xl, 28px);
+  margin-top: var(--spacing-2xl, 48px);
+}
+
+.skill-page-related-section .skill-page-section-title {
+  margin-bottom: var(--spacing-xl, 28px);
+  font-size: 24px;
+}
+
+.skill-page-related-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: var(--spacing-lg, 24px);
+}
+
+/* ===== Состояния загрузки/ошибки ===== */
+.skill-page-loading,
+.skill-page-error {
+  padding: var(--spacing-3xl, 48px);
+  font-family: var(--font-family-body);
+  font-size: var(--font-size-body-large, 18px);
+  color: var(--color-text-secondary, #666);
+  text-align: center;
+}
+
+.skill-page-error {
+  color: var(--color-error, #d32f2f);
+}
+
+/* ===== АДАПТИВНОСТЬ ===== */
+@media (width <= 1024px) {
+  .skill-page-main-grid {
+    grid-template-columns: 280px 1fr;
+    gap: var(--spacing-lg, 24px);
+  }
+
+  .skill-page-right {
+    grid-template-columns: 1fr 220px 120px;
+    gap: var(--spacing-md, 16px);
+  }
+}
+
+@media (width <= 900px) {
+  .skill-page-right {
+    grid-template-areas:
+      'description description'
+      'main-photo vertical-carousel';
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .skill-page-description-block {
+    grid-area: description;
+  }
+
+  .skill-page-main-photo {
+    grid-area: main-photo;
+  }
+
+  .skill-page-vertical-carousel {
+    grid-area: vertical-carousel;
+  }
+
+  .skill-page-carousel-container {
+    flex-direction: row;
+    max-height: none;
+    overflow: auto hidden;
+  }
+
+  .skill-page-carousel-item {
+    width: 120px;
+    min-width: 120px;
+  }
+}
+
+@media (width <= 768px) {
+  .skill-page-container {
+    padding: var(--spacing-lg, 20px) var(--spacing-md, 16px);
+  }
+
+  .skill-page-main-grid {
+    grid-template-columns: 1fr;
+    gap: var(--spacing-lg, 24px);
+  }
+
+  .skill-page-left {
+    max-width: 400px;
+    margin: 0 auto;
+  }
+
+  .skill-page-right {
+    grid-template-areas:
+      'description'
+      'main-photo'
+      'vertical-carousel';
+    grid-template-columns: 1fr;
+  }
+
+  .skill-page-carousel-item {
+    width: 140px;
+    min-width: 140px;
+  }
+
+  .skill-page-related-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (width <= 480px) {
+  .skill-page-container {
+    padding: var(--spacing-md, 16px);
+  }
+
+  .skill-page-skill-name {
+    font-size: 20px;
+  }
+
+  .skill-page-carousel-item {
+    width: 100px;
+    min-width: 100px;
+  }
+}

@@ -7,20 +7,24 @@ interface LikeButtonUIProps {
   canLike: boolean;
 }
 
-function LikeButtonUI({ isLiked, onLikeToggle, canLike }: LikeButtonUIProps) {
-  let title = 'Войдите, чтобы ставить лайк';
-
-  if (canLike) {
-    title = isLiked ? 'Убрать лайк' : 'Поставить лайк';
+function likeButtonTitle(canLike: boolean, isLiked: boolean): string {
+  if (!canLike) {
+    return 'Войдите, чтобы ставить лайк';
   }
+  if (isLiked) {
+    return 'Убрать лайк';
+  }
+  return 'Поставить лайк';
+}
 
+function LikeButtonUI({ isLiked, onLikeToggle, canLike }: LikeButtonUIProps) {
   return (
     <button
       type="button"
       onClick={onLikeToggle}
       disabled={!canLike}
       className={cn(styles.likeButton, isLiked && styles.likeActive)}
-      title={title}
+      title={likeButtonTitle(canLike, isLiked)}
       aria-label={isLiked ? 'Убрать лайк' : 'Поставить лайк'}
     >
       <svg
