@@ -14,15 +14,15 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/PM-YandexPracticum/SkillSwap_47_3.git"
+    "url": "git+https://github.com/RechkalovAA/SkillSwap_47_3.git"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/PM-YandexPracticum/SkillSwap_47_3/issues"
+    "url": "https://github.com/RechkalovAA/SkillSwap_47_3/issues"
   },
-  "homepage": "https://github.com/PM-YandexPracticum/SkillSwap_47_3#readme",
+  "homepage": "https://github.com/RechkalovAA/SkillSwap_47_3#readme",
   "dependencies": {
     "@floating-ui/dom": "^1.7.6",
     "@reduxjs/toolkit": "^2.11.2",
