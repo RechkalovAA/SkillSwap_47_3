@@ -4,9 +4,14 @@ import {
   createExchangeRequest,
   hasActiveRequest,
   getRequestBySkillAndUsers,
-  getRequestsByUser, // ← добавить импорт
+  getRequestsByUser,
+  getIncomingRequests,
+  getOutgoingRequests,
+  getExchangeRequests,
+  updateExchangeRequestStatus,
+  removeExchangeRequest,
 } from '../api/requestsApi';
-import { ExchangeRequest } from '../model/types';
+import type { ExchangeRequest, RequestStatus } from '../model/types';
 
 interface UseExchangeRequestReturn {
   createRequest: (
@@ -19,7 +24,16 @@ interface UseExchangeRequestReturn {
     fromUserId: string,
     toUserId: string,
   ) => boolean;
-  getUserRequests: (userId: string) => ExchangeRequest[]; // ← добавить
+  getUserRequests: (userId: string) => ExchangeRequest[];
+  getIncomingRequestsForUser: (userId: string) => ExchangeRequest[];
+  getOutgoingRequestsForUser: (userId: string) => ExchangeRequest[];
+  getExchangeRequestsForUser: (userId: string) => ExchangeRequest[];
+  updateRequestStatus: (
+    requestId: string,
+    actorUserId: string,
+    status: RequestStatus,
+  ) => ExchangeRequest | null;
+  removeRequest: (requestId: string, actorUserId: string) => boolean;
   isLoading: boolean;
   error: string | null;
 }
@@ -43,7 +57,12 @@ export function useExchangeRequest(): UseExchangeRequestReturn {
           fromUserId,
           toUserId,
         );
-        if (existingRequest && existingRequest.status === 'pending') {
+        if (
+          existingRequest &&
+          (existingRequest.status === 'pending' ||
+            existingRequest.status === 'accepted' ||
+            existingRequest.status === 'inProgress')
+        ) {
           setError('Заявка уже отправлена');
           return null;
         }
@@ -76,10 +95,82 @@ export function useExchangeRequest(): UseExchangeRequestReturn {
     [],
   );
 
+  const getIncomingRequestsForUser = useCallback(
+    (userId: string): ExchangeRequest[] => getIncomingRequests(userId),
+    [],
+  );
+
+  const getOutgoingRequestsForUser = useCallback(
+    (userId: string): ExchangeRequest[] => getOutgoingRequests(userId),
+    [],
+  );
+
+  const getExchangeRequestsForUser = useCallback(
+    (userId: string): ExchangeRequest[] => getExchangeRequests(userId),
+    [],
+  );
+
+  const updateRequestStatus = useCallback(
+    (
+      requestId: string,
+      actorUserId: string,
+      status: RequestStatus,
+    ): ExchangeRequest | null => {
+      setIsLoading(true);
+      setError(null);
+
+      try {
+        const updated = updateExchangeRequestStatus(
+          requestId,
+          actorUserId,
+          status,
+        );
+        if (!updated) {
+          setError('Не удалось обновить статус заявки');
+          return null;
+        }
+        return updated;
+      } catch {
+        setError('Не удалось обновить статус заявки');
+        return null;
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [],
+  );
+
+  const removeRequest = useCallback(
+    (requestId: string, actorUserId: string) => {
+      setIsLoading(true);
+      setError(null);
+
+      try {
+        const removed = removeExchangeRequest(requestId, actorUserId);
+        if (!removed) {
+          setError('Не удалось удалить заявку');
+          return false;
+        }
+        return true;
+      } catch {
+        setError('Не удалось удалить заявку');
+        return false;
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [],
+  );
+
   return {
     createRequest,
     hasActiveRequestForSkill,
     getUserRequests,
+    getIncomingRequestsForUser,
+    getOutgoingRequestsForUser,
+    getExchangeRequestsForUser,
+    updateRequestStatus,
+    removeRequest,
     isLoading,
     error,
   };

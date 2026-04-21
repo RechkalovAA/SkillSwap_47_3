@@ -1,5 +1,10 @@
 // src/entities/request/model/types.ts
-export type RequestStatus = 'pending' | 'accepted' | 'rejected' | 'cancelled';
+export type RequestStatus =
+  | 'pending'
+  | 'accepted'
+  | 'rejected'
+  | 'inProgress'
+  | 'done';
 
 export interface ExchangeRequest {
   id: string;
@@ -16,3 +21,5 @@ export interface CreateExchangeRequestDTO {
   toUserId: string;
   skillId: string;
 }
+
+export const TERMINAL_REQUEST_STATUSES: RequestStatus[] = ['rejected', 'done'];

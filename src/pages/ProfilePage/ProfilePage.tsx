@@ -1,13 +1,22 @@
 // src/pages/ProfilePage/ProfilePage.tsx
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
+import { Link } from 'react-router-dom';
 import { useAuth } from '../../shared/hooks/useAuth';
-import { getRequestsByUser } from '../../features/requests/api/requestsApi';
 import { fetchCities } from '../../api/endpoints/citiesApi';
-import { updateUserProfileInMockDb } from '../../api/endpoints/usersApi';
+import { fetchSubcategories } from '../../api/endpoints/skillsApi';
+import {
+  getAllUsers,
+  updateUserProfileInMockDb,
+} from '../../api/endpoints/usersApi';
 import { Avatar } from '../../shared/ui/Avatar';
 import TagUI from '../../shared/ui/Tag/tagUi';
 import { getCategoryVariant } from '../../widgets/SkillCard/SkillCard';
+import { useExchangeRequest } from '../../features/requests/hooks/useExchangeRequest';
 import type { User } from '../../entities/user/model/types';
+import type {
+  ExchangeRequest,
+  RequestStatus,
+} from '../../features/requests/model/types';
 import requestIcon from '../../assets/images/request.svg';
 import messageIcon from '../../assets/images/message-text.svg';
 import favoriteIcon from '../../assets/images/like.svg';
@@ -37,11 +46,33 @@ const requestStatusMap: Record<string, string> = {
   pending: 'Ожидает',
   accepted: 'Принята',
   rejected: 'Отклонена',
-  cancelled: 'Отменена',
+  inProgress: 'В процессе',
+  done: 'Завершена',
+};
+
+const requestStatusClassSuffix: Record<RequestStatus, string> = {
+  pending: 'pending',
+  accepted: 'accepted',
+  rejected: 'rejected',
+  inProgress: 'in-progress',
+  done: 'done',
+};
+
+type FeedbackState = {
+  type: 'success' | 'error';
+  text: string;
 };
 
 export default function ProfilePage() {
   const { user, isAuth, isLoading, updateUser } = useAuth();
+  const {
+    getIncomingRequestsForUser,
+    getOutgoingRequestsForUser,
+    getExchangeRequestsForUser,
+    updateRequestStatus,
+    removeRequest,
+    isLoading: isRequestsLoading,
+  } = useExchangeRequest();
   const [activeTab, setActiveTab] = useState<ProfileTabKey>('profile');
   const [cities, setCities] = useState<string[]>([]);
 
@@ -55,8 +86,25 @@ export default function ProfilePage() {
   const [isSaving, setIsSaving] = useState(false);
   const [favoriteUsers] = useState<User[]>([]); // ← исправлено: User[] вместо any[]
   const [isFavoritesLoading] = useState(false);
-
-  const userRequests = user ? getRequestsByUser(user.id) : [];
+  const [incomingRequests, setIncomingRequests] = useState<ExchangeRequest[]>(
+    [],
+  );
+  const [outgoingRequests, setOutgoingRequests] = useState<ExchangeRequest[]>(
+    [],
+  );
+  const [exchangeRequests, setExchangeRequests] = useState<ExchangeRequest[]>(
+    [],
+  );
+  const [userNameById, setUserNameById] = useState<Record<string, string>>({});
+  const [userSkillById, setUserSkillById] = useState<Record<string, string>>(
+    {},
+  );
+  const [skillNameById, setSkillNameById] = useState<Record<string, string>>(
+    {},
+  );
+  const [requestFeedback, setRequestFeedback] = useState<FeedbackState | null>(
+    null,
+  );
   const skillsToLearn = user?.skills?.slice(0, 10) || [];
 
   useEffect(() => {
@@ -77,6 +125,70 @@ export default function ProfilePage() {
       setAbout(user.about ?? '');
     }
   }, [user]);
+
+  useEffect(() => {
+    const loadRequestDictionaries = async () => {
+      const [users, subcategories] = await Promise.all([
+        getAllUsers(),
+        fetchSubcategories(),
+      ]);
+
+      const nextUserNameById: Record<string, string> = {};
+      const nextUserSkillById: Record<string, string> = {};
+      users.forEach((item) => {
+        nextUserNameById[item.id] = item.name;
+        if (item.skillCanTeach?.id) {
+          nextUserSkillById[item.id] = item.skillCanTeach.id;
+        }
+      });
+
+      const nextSkillNameById: Record<string, string> = {};
+      subcategories.forEach((skill) => {
+        nextSkillNameById[skill.id] = skill.name;
+      });
+
+      setUserNameById(nextUserNameById);
+      setUserSkillById(nextUserSkillById);
+      setSkillNameById(nextSkillNameById);
+    };
+
+    loadRequestDictionaries();
+  }, []);
+
+  const refreshRequests = useCallback(() => {
+    if (!user) {
+      setIncomingRequests([]);
+      setOutgoingRequests([]);
+      setExchangeRequests([]);
+      return;
+    }
+
+    setIncomingRequests(getIncomingRequestsForUser(user.id));
+    setOutgoingRequests(getOutgoingRequestsForUser(user.id));
+    setExchangeRequests(getExchangeRequestsForUser(user.id));
+  }, [
+    getExchangeRequestsForUser,
+    getIncomingRequestsForUser,
+    getOutgoingRequestsForUser,
+    user,
+  ]);
+
+  useEffect(() => {
+    refreshRequests();
+  }, [refreshRequests]);
+
+  useEffect(() => {
+    const handleStorage = (event: StorageEvent) => {
+      if (event.key === 'exchange_requests') {
+        refreshRequests();
+      }
+    };
+
+    window.addEventListener('storage', handleStorage);
+    return () => {
+      window.removeEventListener('storage', handleStorage);
+    };
+  }, [refreshRequests]);
 
   if (isLoading) {
     return <div className={styles['profile-state']}>Загрузка профиля...</div>;
@@ -127,6 +239,172 @@ export default function ProfilePage() {
       about: nextUser.about,
     });
     setIsSaving(false);
+  };
+
+  const handleRequestAction = (
+    requestId: string,
+    nextStatus: RequestStatus,
+  ) => {
+    if (!user) return;
+
+    const updated = updateRequestStatus(requestId, user.id, nextStatus);
+    if (!updated) {
+      setRequestFeedback({
+        type: 'error',
+        text: 'Не удалось обновить статус заявки',
+      });
+      return;
+    }
+
+    setRequestFeedback(null);
+    refreshRequests();
+  };
+
+  const handlePendingOutgoingCancel = (requestId: string) => {
+    if (!user) return;
+
+    const removed = removeRequest(requestId, user.id);
+    if (!removed) {
+      setRequestFeedback({
+        type: 'error',
+        text: 'Не удалось отменить заявку',
+      });
+      return;
+    }
+
+    setRequestFeedback(null);
+    refreshRequests();
+  };
+
+  const renderRequestCard = (
+    request: ExchangeRequest,
+    currentUserId: string,
+  ) => {
+    const isIncoming = request.toUserId === currentUserId;
+    const isOutgoing = request.fromUserId === currentUserId;
+    const counterpartyId = isIncoming ? request.fromUserId : request.toUserId;
+    const counterpartyName = userNameById[counterpartyId] || counterpartyId;
+    const skillName = skillNameById[request.skillId] || request.skillId;
+    const counterpartySkillId =
+      userSkillById[counterpartyId] || request.skillId;
+    const counterpartyLink = `/skill/${counterpartySkillId}/${counterpartyId}`;
+    const isPendingOutgoing = isOutgoing && request.status === 'pending';
+
+    return (
+      <article
+        key={request.id}
+        className={`${styles['request-card']} ${
+          isOutgoing ? styles['request-card-outgoing'] : ''
+        }`}
+      >
+        <Link to={counterpartyLink} className={styles['request-link']}>
+          <div className={styles['request-header']}>
+            <span className={styles['request-skill']}>Навык: {skillName}</span>
+            {isPendingOutgoing ? (
+              <button
+                type="button"
+                className={`${styles['request-status']} ${
+                  styles[
+                    `request-status-${requestStatusClassSuffix[request.status]}`
+                  ]
+                } ${styles['request-status-cancel-button']}`}
+                onClick={(event) => {
+                  event.preventDefault();
+                  event.stopPropagation();
+                  handlePendingOutgoingCancel(request.id);
+                }}
+                disabled={isRequestsLoading}
+              >
+                <span className={styles['request-status-default-text']}>
+                  {requestStatusMap[request.status] || request.status}
+                </span>
+                <span className={styles['request-status-hover-text']}>
+                  Отменить
+                </span>
+              </button>
+            ) : (
+              <span
+                className={`${styles['request-status']} ${
+                  styles[
+                    `request-status-${requestStatusClassSuffix[request.status]}`
+                  ]
+                }`}
+              >
+                {requestStatusMap[request.status] || request.status}
+              </span>
+            )}
+          </div>
+
+          <p className={styles['request-info']}>
+            {isIncoming && `От пользователя ${counterpartyName}`}
+            {isOutgoing && `Заявка пользователю ${counterpartyName}`}
+          </p>
+
+          <div className={styles['request-date']}>
+            Создана: {new Date(request.createdAt).toLocaleDateString('ru-RU')}
+          </div>
+        </Link>
+
+        {request.status === 'pending' && isIncoming && (
+          <div className={styles['request-actions']}>
+            <button
+              type="button"
+              className={styles['request-action-accept']}
+              onClick={(event) => {
+                event.stopPropagation();
+                handleRequestAction(request.id, 'accepted');
+              }}
+              disabled={isRequestsLoading}
+            >
+              Принять
+            </button>
+            <button
+              type="button"
+              className={styles['request-action-reject']}
+              onClick={(event) => {
+                event.stopPropagation();
+                handleRequestAction(request.id, 'rejected');
+              }}
+              disabled={isRequestsLoading}
+            >
+              Отклонить
+            </button>
+          </div>
+        )}
+
+        {request.status === 'accepted' && (
+          <div className={styles['request-actions']}>
+            <button
+              type="button"
+              className={styles['request-action-progress']}
+              onClick={(event) => {
+                event.stopPropagation();
+                handleRequestAction(request.id, 'inProgress');
+              }}
+              disabled={isRequestsLoading}
+            >
+              Перевести в работу
+            </button>
+          </div>
+        )}
+
+        {request.status === 'inProgress' && (
+          <div className={styles['request-actions']}>
+            <button
+              type="button"
+              className={styles['request-action-done']}
+              onClick={(event) => {
+                event.stopPropagation();
+                handleRequestAction(request.id, 'done');
+              }}
+              disabled={isRequestsLoading}
+            >
+              Завершить обмен
+            </button>
+          </div>
+        )}
+      </article>
+    );
   };
 
   const renderContent = () => {
@@ -307,36 +585,47 @@ export default function ProfilePage() {
       case 'requests':
         return (
           <div className={styles['requests-section']}>
-            {userRequests.length === 0 ? (
+            <h2 className={styles['section-title']}>Входящие</h2>
+            {incomingRequests.length === 0 ? (
               <p className={styles['requests-empty']}>
-                У вас пока нет заявок на обмен
+                Входящих заявок пока нет
               </p>
             ) : (
               <div className={styles['requests-list']}>
-                {userRequests.map((request) => (
-                  <div key={request.id} className={styles['request-card']}>
-                    <div className={styles['request-header']}>
-                      <span className={styles['request-skill']}>
-                        Навык: {request.skillId}
-                      </span>
-                      <span
-                        className={`${styles['request-status']} ${styles[`request-status-${request.status}`]}`}
-                      >
-                        {requestStatusMap[request.status] || request.status}
-                      </span>
-                    </div>
-                    <div className={styles['request-info']}>
-                      <p>
-                        {request.fromUserId === user.id
-                          ? `Вы отправили заявку пользователю ${request.toUserId.slice(0, 8)}...`
-                          : `Пользователь ${request.fromUserId.slice(0, 8)}... отправил вам заявку`}
-                      </p>
-                    </div>
-                    <div className={styles['request-date']}>
-                      {new Date(request.createdAt).toLocaleDateString('ru-RU')}
-                    </div>
-                  </div>
-                ))}
+                {incomingRequests.map((request) =>
+                  renderRequestCard(request, user.id),
+                )}
+              </div>
+            )}
+
+            <h2 className={styles['section-title']}>Исходящие</h2>
+            {outgoingRequests.length === 0 ? (
+              <p className={styles['requests-empty']}>
+                Вы еще не отправляли заявки
+              </p>
+            ) : (
+              <div className={styles['requests-list']}>
+                {outgoingRequests.map((request) =>
+                  renderRequestCard(request, user.id),
+                )}
+              </div>
+            )}
+          </div>
+        );
+
+      case 'exchanges':
+        return (
+          <div className={styles['requests-section']}>
+            <h2 className={styles['section-title']}>Мои обмены</h2>
+            {exchangeRequests.length === 0 ? (
+              <p className={styles['requests-empty']}>
+                Пока нет активных или завершенных обменовФ
+              </p>
+            ) : (
+              <div className={styles['requests-list']}>
+                {exchangeRequests.map((request) =>
+                  renderRequestCard(request, user.id),
+                )}
               </div>
             )}
           </div>
@@ -404,6 +693,17 @@ export default function ProfilePage() {
       </aside>
 
       <div className={styles.content}>
+        {requestFeedback && (
+          <div
+            className={`${styles['request-feedback']} ${
+              requestFeedback.type === 'success'
+                ? styles['request-feedback-success']
+                : styles['request-feedback-error']
+            }`}
+          >
+            {requestFeedback.text}
+          </div>
+        )}
         {renderContent()}
 
         <div>
