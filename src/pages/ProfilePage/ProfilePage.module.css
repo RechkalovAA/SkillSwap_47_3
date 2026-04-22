@@ -271,6 +271,227 @@
   background: var(--color-disabled);
 }
 
+.section-title {
+  margin: 0;
+  font-size: var(--font-size-h3);
+  line-height: var(--line-height-h3);
+  color: var(--color-text);
+}
+
+.requests-section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-12px);
+  width: 100%;
+}
+
+.requests-list {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--spacing-12px);
+  margin-bottom: var(--spacing-12px);
+}
+
+.requests-empty {
+  margin: 0;
+  color: var(--color-text-caption);
+}
+
+.request-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-8px);
+  padding: var(--spacing-12px);
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+}
+
+.request-card-outgoing {
+  transition: border-color 0.2s ease;
+}
+
+.request-card-outgoing:hover,
+.request-card-outgoing:focus-within {
+  border-color: var(--color-accent-pressed);
+  box-shadow: 0 0 0 1px var(--color-accent-pressed);
+}
+
+.request-link {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-8px);
+  padding: 4px;
+  color: inherit;
+  text-decoration: none;
+  border-radius: var(--radius-sm);
+  transition: border-color 0.2s ease;
+}
+
+.request-link:hover {
+  text-decoration: none;
+}
+
+.request-link:focus-visible {
+  outline: 2px solid var(--color-accent-pressed);
+  outline-offset: 2px;
+}
+
+.request-header {
+  display: flex;
+  gap: var(--spacing-12px);
+  align-items: center;
+  justify-content: space-between;
+}
+
+.request-skill {
+  font-weight: 600;
+}
+
+.request-status {
+  padding: 4px 10px;
+  font-size: var(--font-size-caption);
+  line-height: var(--line-height-caption);
+  border: 0;
+  border-radius: 999px;
+}
+
+.request-status-pending {
+  color: var(--color-text);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+}
+
+.request-status-cancel-button {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 92px;
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    border-color 0.2s ease,
+    color 0.2s ease;
+}
+
+.request-status-cancel-button:hover {
+  color: #8b1d1d;
+  border-color: #c62828;
+}
+
+.request-status-cancel-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.request-status-default-text,
+.request-status-hover-text {
+  display: inline-flex;
+}
+
+.request-status-hover-text {
+  display: none;
+}
+
+.request-status-cancel-button:hover .request-status-default-text {
+  display: none;
+}
+
+.request-status-cancel-button:hover .request-status-hover-text {
+  display: inline-flex;
+}
+
+.request-status-accepted {
+  color: #1f4a17;
+  background: #dff2d8;
+}
+
+.request-status-rejected {
+  color: #8b1d1d;
+  background: #ffe2e2;
+}
+
+.request-status-in-progress {
+  color: #18406c;
+  background: #e0eeff;
+}
+
+.request-status-done {
+  color: #4d3a07;
+  background: #f8efc9;
+}
+
+.request-info,
+.request-date {
+  margin: 0;
+  color: var(--color-text-caption);
+}
+
+.request-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-8px);
+}
+
+.request-actions button {
+  min-height: 36px;
+  padding: 8px 12px;
+  cursor: pointer;
+  border: 0;
+  border-radius: var(--radius-sm);
+}
+
+.request-action-accept {
+  color: #fff;
+  background: #2e7d32;
+}
+
+.request-action-accept:hover:not(:disabled) {
+  background: #3f9544;
+}
+
+.request-action-reject {
+  color: #fff;
+  background: #c62828;
+}
+
+.request-action-reject:hover:not(:disabled) {
+  background: #d94b4b;
+}
+
+.request-action-progress {
+  color: #fff;
+  background: #1565c0;
+}
+
+.request-action-done {
+  color: #fff;
+  background: #8d6e00;
+}
+
+.request-actions button:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.request-feedback {
+  width: 100%;
+  padding: var(--spacing-12px) var(--spacing-16px);
+  margin-bottom: var(--spacing-12px);
+  border-radius: var(--radius-sm);
+}
+
+.request-feedback-success {
+  color: #1f4a17;
+  background: #dff2d8;
+}
+
+.request-feedback-error {
+  color: #8b1d1d;
+  background: #ffe2e2;
+}
+
 @media (width <= 1100px) {
   .profile-page {
     grid-template-columns: 1fr;

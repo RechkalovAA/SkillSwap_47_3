@@ -1,22 +1,12 @@
-export type RequestStatus = 'pending' | 'accepted' | 'rejected' | 'cancelled';
+import type { ExchangeRequest as BaseExchangeRequest } from '../../../entities/request/model/types';
 
-export interface ExchangeRequest {
-  id: string;
-  fromUserId: string;
-  toUserId: string;
-  skillId: string;
-  status: RequestStatus;
-  createdAt: string;
-  updatedAt: string;
-}
+export type {
+  RequestStatus,
+  ExchangeRequest,
+  CreateExchangeRequestDTO,
+} from '../../../entities/request/model/types';
 
-export interface CreateExchangeRequestDTO {
-  fromUserId: string;
-  toUserId: string;
-  skillId: string;
-}
-
-export interface ExchangeRequestWithUser extends ExchangeRequest {
+export interface ExchangeRequestWithUser extends BaseExchangeRequest {
   fromUserName?: string;
   toUserName?: string;
   skillName?: string;
