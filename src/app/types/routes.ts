@@ -37,13 +37,6 @@ export const SKILL_BASE_ROUTE = '/skill' as const;
  */
 export const PROFILE_ROUTE = '/profile' as const;
 
-/**
- * Вложенные маршруты профиля
- */
-export const PROFILE_EDIT_ROUTE = '/profile/edit' as const;
-export const PROFILE_SETTINGS_ROUTE = '/profile/settings' as const;
-export const PROFILE_SECURITY_ROUTE = '/profile/security' as const;
-
 // ============ ИЗБРАННОЕ ============
 
 /**
@@ -111,9 +104,6 @@ export const PUBLIC_ONLY_ROUTES = [LOGIN_ROUTE] as const;
  */
 export const PROTECTED_ROUTES = [
   PROFILE_ROUTE,
-  PROFILE_EDIT_ROUTE,
-  PROFILE_SETTINGS_ROUTE,
-  PROFILE_SECURITY_ROUTE,
   FAVORITES_ROUTE,
   CREATE_ROUTE,
 ] as const;
@@ -175,15 +165,9 @@ export const isPublicOnlyRoute = (path: string): boolean =>
 // ============ ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ============
 
 /**
- * Формирует путь к профилю с возможным вложенным сегментом
- * @param segment - опциональный вложенный путь (edit, settings, security, notifications)
+ * Возвращает путь к профилю
  */
-export const getProfileRoute = (
-  segment?: 'edit' | 'settings' | 'security' | 'notifications',
-): string => {
-  if (!segment) return PROFILE_ROUTE;
-  return `/profile/${segment}`;
-};
+export const getProfileRoute = (): string => PROFILE_ROUTE;
 
 export const resolvePostAuthRedirect = (path?: string | null): string => {
   if (!path || path === LOGIN_ROUTE || path === REGISTER_ROUTE) {

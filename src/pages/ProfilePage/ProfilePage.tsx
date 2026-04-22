@@ -1,6 +1,6 @@
 // src/pages/ProfilePage/ProfilePage.tsx
 import { useState, useEffect, useCallback } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../shared/hooks/useAuth';
 import { fetchCities } from '../../api/endpoints/citiesApi';
 import { fetchSubcategories } from '../../api/endpoints/skillsApi';
@@ -12,7 +12,8 @@ import { Avatar } from '../../shared/ui/Avatar';
 import TagUI from '../../shared/ui/Tag/tagUi';
 import { getCategoryVariant } from '../../widgets/SkillCard/SkillCard';
 import { useExchangeRequest } from '../../features/requests/hooks/useExchangeRequest';
-import type { User } from '../../entities/user/model/types';
+import { useFavoriteUsers } from '../../features/favorites/hooks/useFavoriteUsers';
+import { CatalogCard } from '../../widgets/CatalogCard';
 import type {
   ExchangeRequest,
   RequestStatus,
@@ -64,7 +65,15 @@ type FeedbackState = {
 };
 
 export default function ProfilePage() {
+  const location = useLocation();
+  const navigate = useNavigate();
   const { user, isAuth, isLoading, updateUser } = useAuth();
+  const {
+    favoriteUsers,
+    skills,
+    isLoading: isFavoritesLoading,
+    error: favoritesError,
+  } = useFavoriteUsers(isAuth);
   const {
     getIncomingRequestsForUser,
     getOutgoingRequestsForUser,
@@ -73,7 +82,13 @@ export default function ProfilePage() {
     removeRequest,
     isLoading: isRequestsLoading,
   } = useExchangeRequest();
-  const [activeTab, setActiveTab] = useState<ProfileTabKey>('profile');
+  const [activeTab, setActiveTab] = useState<ProfileTabKey>(() => {
+    const params = new URLSearchParams(window.location.search);
+    const tab = params.get('tab');
+    return profileTabs.some((item) => item.key === tab)
+      ? (tab as ProfileTabKey)
+      : 'profile';
+  });
   const [cities, setCities] = useState<string[]>([]);
 
   // Form state
@@ -84,8 +99,6 @@ export default function ProfilePage() {
   const [city, setCity] = useState('');
   const [about, setAbout] = useState('');
   const [isSaving, setIsSaving] = useState(false);
-  const [favoriteUsers] = useState<User[]>([]); // ← исправлено: User[] вместо any[]
-  const [isFavoritesLoading] = useState(false);
   const [incomingRequests, setIncomingRequests] = useState<ExchangeRequest[]>(
     [],
   );
@@ -125,6 +138,19 @@ export default function ProfilePage() {
       setAbout(user.about ?? '');
     }
   }, [user]);
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const tab = params.get('tab');
+    if (profileTabs.some((item) => item.key === tab)) {
+      setActiveTab(tab as ProfileTabKey);
+      return;
+    }
+
+    if (location.search) {
+      setActiveTab('profile');
+    }
+  }, [location.search]);
 
   useEffect(() => {
     const loadRequestDictionaries = async () => {
@@ -619,7 +645,7 @@ export default function ProfilePage() {
             <h2 className={styles['section-title']}>Мои обмены</h2>
             {exchangeRequests.length === 0 ? (
               <p className={styles['requests-empty']}>
-                Пока нет активных или завершенных обменовФ
+                Пока нет активных или завершенных обменов
               </p>
             ) : (
               <div className={styles['requests-list']}>
@@ -641,6 +667,18 @@ export default function ProfilePage() {
           );
         }
 
+        if (favoritesError) {
+          return (
+            <div className={styles['favorites-content']}>
+              <h2 className={styles['favorites-title']}>Избранное</h2>
+              <p className={styles['favorites-error']}>{favoritesError}</p>
+              <Link className={styles['favorites-link']} to="/catalog">
+                Перейти в каталог
+              </Link>
+            </div>
+          );
+        }
+
         if (favoriteUsers.length === 0) {
           return (
             <div className={styles['favorites-content']}>
@@ -648,6 +686,9 @@ export default function ProfilePage() {
               <p className={styles['favorites-empty']}>
                 Вы еще не добавили карточки в избранное.
               </p>
+              <Link className={styles['favorites-link']} to="/catalog">
+                Перейти в каталог
+              </Link>
             </div>
           );
         }
@@ -655,8 +696,17 @@ export default function ProfilePage() {
         return (
           <div className={styles['favorites-content']}>
             <h2 className={styles['favorites-title']}>Избранное</h2>
+            <p className={styles['favorites-count']}>
+              {favoriteUsers.length} предложений
+            </p>
             <div className={styles['favorites-grid']}>
-              {/* Здесь будут карточки избранных пользователей */}
+              {favoriteUsers.map((favoriteUser) => (
+                <CatalogCard
+                  key={favoriteUser.id}
+                  user={favoriteUser}
+                  skills={skills}
+                />
+              ))}
             </div>
           </div>
         );
@@ -677,7 +727,15 @@ export default function ProfilePage() {
                 <button
                   type="button"
                   className={`${styles['sidebar-item']} ${activeTab === tab.key ? styles['sidebar-item-active'] : ''}`}
-                  onClick={() => setActiveTab(tab.key)}
+                  onClick={() => {
+                    setActiveTab(tab.key);
+                    const nextSearch =
+                      tab.key === 'profile' ? '' : `?tab=${tab.key}`;
+                    navigate({
+                      pathname: location.pathname,
+                      search: nextSearch,
+                    });
+                  }}
                 >
                   <img
                     className={styles['sidebar-item-icon']}

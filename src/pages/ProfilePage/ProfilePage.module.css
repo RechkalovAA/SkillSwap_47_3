@@ -95,6 +95,11 @@
   color: var(--color-text);
 }
 
+.favorites-count {
+  margin: 0;
+  color: var(--color-text-caption);
+}
+
 .loading,
 .favorites-error,
 .favorites-empty {
@@ -113,6 +118,11 @@
 
 .favorites-empty {
   color: var(--color-text-caption);
+}
+
+.favorites-link {
+  width: fit-content;
+  color: var(--color-accent-pressed);
 }
 
 .favorites-grid {

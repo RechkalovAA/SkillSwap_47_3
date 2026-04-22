@@ -10,6 +10,7 @@ import {
   Routes,
   Route,
   Outlet,
+  Navigate,
   useLocation,
   useNavigate,
 } from 'react-router-dom';
@@ -23,9 +24,6 @@ import type {
 import ProfilePage from '../pages/ProfilePage/ProfilePage';
 
 const CatalogPage = lazy(() => import('../pages/CatalogPage/CatalogPage'));
-const FavoritesPage = lazy(
-  () => import('../pages/FavoritesPage/FavoritesPage'),
-);
 const SkillPage = lazy(() =>
   import('../pages/SkillPage/SkillPage').then((module) => ({
     default: module.SkillPage,
@@ -127,7 +125,10 @@ export function App() {
           <Route path="catalog" element={<CatalogPage />} />
           <Route path="profile" element={<ProfilePage />} />
           <Route path="user/:id" element={<ProfilePage />} />
-          <Route path="favorites" element={<FavoritesPage />} />
+          <Route
+            path="favorites"
+            element={<Navigate to="/profile?tab=favorites" replace />}
+          />
           <Route path="skill/:skillId/:userId" element={<SkillPage />} />
           <Route path="skill/:id" element={<SkillPage />} />{' '}
           {/* для обратной совместимости (опционально) */}
