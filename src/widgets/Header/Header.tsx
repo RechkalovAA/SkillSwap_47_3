@@ -1,6 +1,6 @@
 /* eslint-disable react/require-default-props */
 import { useEffect, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import styles from './Header.module.css';
 import logoIcon from '../../assets/images/logo.svg';
 import { useAuth } from '../../shared/hooks/useAuth';
@@ -220,6 +220,7 @@ export function HeaderGuest({
   onApplyCatalogFacet,
 }: HeaderGuestUIProps) {
   const navigate = useNavigate();
+  const location = useLocation();
   const { isAuth, user, logout } = useAuth();
 
   if (isAuth && user) {
@@ -239,8 +240,20 @@ export function HeaderGuest({
 
   return (
     <HeaderGuestUI
-      onLoginClick={onLoginClick ?? (() => navigate('/login'))}
-      onRegisterClick={onRegisterClick ?? (() => navigate('/register'))}
+      onLoginClick={
+        onLoginClick ??
+        (() =>
+          navigate('/login', {
+            state: { from: { pathname: location.pathname } },
+          }))
+      }
+      onRegisterClick={
+        onRegisterClick ??
+        (() =>
+          navigate('/register', {
+            state: { from: { pathname: location.pathname } },
+          }))
+      }
       onSearch={onSearch}
       onApplyCatalogFacet={onApplyCatalogFacet}
     />
