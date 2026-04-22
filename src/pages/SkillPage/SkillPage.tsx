@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { useSkillPage } from './hooks/useSkillPage';
 import { useAuth } from '../../shared/hooks/useAuth';
 import { useExchangeRequest } from '../../features/requests/hooks/useExchangeRequest';
@@ -13,12 +13,11 @@ import styles from './SkillPage.module.css';
 
 export function SkillPage() {
   // ✅ ВСЕ ХУКИ В НАЧАЛЕ КОМПОНЕНТА
-  const { user, relatedUsers, loading, error, skillId, userId } =
-    useSkillPage();
+  const { user, relatedUsers, loading, error, skillId } = useSkillPage();
   const { isAuth, user: currentUser } = useAuth();
   const { createRequest, hasActiveRequestForSkill } = useExchangeRequest();
   const navigate = useNavigate();
-  // const location = useLocation();
+  const location = useLocation();
 
   const [modalOpen, setModalOpen] = useState(false);
   const [modalType, setModalType] = useState<ExchangeModalType>('auth');
@@ -77,7 +76,7 @@ export function SkillPage() {
   const handleModalAction = () => {
     if (modalType === 'auth') {
       navigate('/login', {
-        state: { from: { pathname: `/skill/${skillId}/${userId}` } },
+        state: { from: { pathname: location.pathname } },
       });
     }
     setModalOpen(false);

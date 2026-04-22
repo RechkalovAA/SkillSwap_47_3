@@ -153,7 +153,9 @@ function LoginPage() {
                 Войти
               </button>
               <p className={styles.register}>
-                <Link to="/register">Зарегистрироваться</Link>
+                <Link to="/register" state={location.state}>
+                  Зарегистрироваться
+                </Link>
               </p>
             </div>
           </div>
