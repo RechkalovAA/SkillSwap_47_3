@@ -13,6 +13,7 @@ export type Subcategory = {
 };
 
 export type SkillTeach = {
+  length: number;
   id: string; // id субкатегории / навыка
   categoryId: string;
   name: string;

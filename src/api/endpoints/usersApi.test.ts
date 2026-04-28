@@ -38,20 +38,24 @@ describe('usersApi', () => {
 
     const testUser = {
       id: 'test-1',
-      email: ' New@test.com ',
-      name: 'New User',
-      password: '123',
+      email: 'test@example.com',
+      name: 'Test User',
+      password: 'password',
       birthDate: '1990-01-01',
-      age: 30,
-      gender: 'мужской',
-      createdAt: '2023-01-01',
-      avatar: 'avatar.png',
+      age: 33,
+      gender: 'мужской' as const,
+      createdAt: new Date().toISOString(),
+      avatar: 'avatar.jpg',
       skills: [],
-      skillCanTeach: {
-        id: '1',
-        categoryId: 'cat1',
-        name: 'Skill',
-      },
+      skillCanTeach: [
+        {
+          id: 'skill-1',
+          categoryId: 'cat-1',
+          name: 'Test Skill',
+          description: 'Test description',
+          length: 0, // ← добавляем обязательное поле length
+        },
+      ],
     } as User;
 
     beforeEach(() => {

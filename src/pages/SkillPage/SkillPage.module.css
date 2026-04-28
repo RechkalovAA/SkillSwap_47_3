@@ -247,10 +247,6 @@
     width: 140px;
     min-width: 140px;
   }
-
-  .skill-page-related-grid {
-    grid-template-columns: 1fr;
-  }
 }
 
 @media (width <= 480px) {
