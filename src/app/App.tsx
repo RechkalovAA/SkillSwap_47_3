@@ -106,15 +106,6 @@ function Layout() {
   );
 }
 
-function CreateSkillPage() {
-  return (
-    <div className="container">
-      <h1>Создание навыка</h1>
-      <p>Здесь будет форма создания нового навыка</p>
-    </div>
-  );
-}
-
 export function App() {
   return (
     <Suspense fallback={<div>Loading...</div>}>
@@ -132,7 +123,11 @@ export function App() {
           <Route path="skill/:skillId/:userId" element={<SkillPage />} />
           <Route path="skill/:id" element={<SkillPage />} />{' '}
           {/* для обратной совместимости (опционально) */}
-          <Route path="create" element={<CreateSkillPage />} />
+          <Route path="create" element={<Step3Form />} />
+          <Route
+            path="skill/:skillId/edit"
+            element={<Step3Form isEditMode />}
+          />
           <Route path="about" element={<AboutPage />} />
           <Route path="contacts" element={<ContactsPage />} />
           <Route path="blog" element={<BlogPage />} />

@@ -4,7 +4,7 @@ export interface User {
   id: string;
   name: string;
   email: string;
-  password: string;
+  password?: string;
   avatar: string;
   city?: string;
   birthDate: string;
@@ -13,7 +13,7 @@ export interface User {
   createdAt: string; // дата создания профиля
   favorites?: string[]; // массив id пользователей, карточки которых лайкнул данный пользователь
   liked_me?: string[]; // массив id пользователей, которые лайкнули данного пользователя
-  skillCanTeach: SkillTeach; // навыки, которым может научить
+  skillCanTeach?: SkillTeach[]; // навыки, которым может научить
   images?: string[];
   skills: string[]; // = subcategoriesWantToLearn навыки, которым хочет научиться, массив id субкатегорий
   about?: string; // о себе

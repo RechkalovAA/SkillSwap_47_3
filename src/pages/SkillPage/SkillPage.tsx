@@ -1,3 +1,4 @@
+// src/pages/SkillPage/SkillPage.tsx
 import { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useSkillPage } from './hooks/useSkillPage';
@@ -8,11 +9,10 @@ import {
   ExchangeModalType,
 } from '../../features/requests/ui/ExchangeModal/ExchangeModal';
 import { Button } from '../../shared/ui/Button';
-import { SkillCard } from '../../widgets/SkillCard/SkillCard';
+import { CatalogCard } from '../../widgets/CatalogCard/CatalogCard';
 import styles from './SkillPage.module.css';
 
 export function SkillPage() {
-  // ✅ ВСЕ ХУКИ В НАЧАЛЕ КОМПОНЕНТА
   const { user, relatedUsers, loading, error, skillId } = useSkillPage();
   const { isAuth, user: currentUser } = useAuth();
   const { createRequest, hasActiveRequestForSkill } = useExchangeRequest();
@@ -43,6 +43,10 @@ export function SkillPage() {
       </div>
     );
   }
+
+  const displaySkill = skillId
+    ? user.skillCanTeach?.find((skill) => skill.id === skillId)
+    : user.skillCanTeach?.[0];
 
   const hasActiveRequest =
     currentUser && skillId && user
@@ -86,14 +90,23 @@ export function SkillPage() {
     setModalOpen(false);
   };
 
-  // ✅ Основной return
+  const getCategoryPath = (): string => {
+    if (!displaySkill) return 'Категория не указана';
+    return 'Категория / Подкатегория';
+  };
+
   return (
     <div className={styles['skill-page']}>
       <div className={styles['skill-page-container']}>
         <div className={styles['skill-page-main-grid']}>
-          {/* ЛЕВАЯ КОЛОНКА — используем SkillCard с hideButton */}
+          {/* ЛЕВАЯ КОЛОНКА — карточка пользователя */}
           <div className={styles['skill-page-left']}>
-            <SkillCard user={user} variant="default" hideButton />
+            <CatalogCard
+              user={user}
+              variant="default"
+              hideButton
+              activeSkillId={skillId}
+            />
           </div>
 
           {/* ПРАВАЯ КОЛОНКА — описание, фото, кнопка обмена */}
@@ -101,13 +114,13 @@ export function SkillPage() {
             <div className={styles['skill-page-description-block']}>
               <div className={styles['skill-page-skill-text']}>
                 <h2 className={styles['skill-page-skill-name']}>
-                  {user.skillCanTeach?.name}
+                  {displaySkill?.name || 'Навык не указан'}
                 </h2>
                 <span className={styles['skill-page-skill-category']}>
-                  Творчество и искусство / Музыка и звук
+                  {getCategoryPath()}
                 </span>
                 <p className={styles['skill-page-skill-description']}>
-                  {user.skillCanTeach?.description || 'Описание отсутствует'}
+                  {displaySkill?.description || 'Описание отсутствует'}
                 </p>
               </div>
               <div className={styles['skill-page-exchange-button']}>
@@ -129,7 +142,7 @@ export function SkillPage() {
                     ? `/photos/${user.images[0]}`
                     : '/placeholder.jpg'
                 }
-                alt={user.skillCanTeach?.name}
+                alt={displaySkill?.name}
                 className={styles['skill-page-main-photo-image']}
               />
             </div>
@@ -141,7 +154,7 @@ export function SkillPage() {
                     <img
                       key={image}
                       src={`/photos/${image}`}
-                      alt={`${user.skillCanTeach?.name} - фото ${idx + 2}`}
+                      alt={`${displaySkill?.name} - фото ${idx + 2}`}
                       className={styles['skill-page-carousel-item']}
                     />
                   ))}
@@ -151,7 +164,7 @@ export function SkillPage() {
           </div>
         </div>
 
-        {/* Похожие предложения — компактные карточки */}
+        {/* Похожие предложения */}
         {relatedUsers.length > 0 && (
           <div className={styles['skill-page-related-section']}>
             <h2 className={styles['skill-page-section-title']}>
@@ -159,10 +172,11 @@ export function SkillPage() {
             </h2>
             <div className={styles['skill-page-related-grid']}>
               {relatedUsers.map((relatedUser) => (
-                <SkillCard
+                <CatalogCard
                   key={relatedUser.id}
                   user={relatedUser}
                   variant="compact"
+                  activeSkillId={skillId}
                 />
               ))}
             </div>
@@ -175,7 +189,7 @@ export function SkillPage() {
         type={modalType}
         onClose={handleModalClose}
         onAction={handleModalAction}
-        skillName={user.skillCanTeach?.name}
+        skillName={displaySkill?.name}
         userName={user.name}
       />
     </div>

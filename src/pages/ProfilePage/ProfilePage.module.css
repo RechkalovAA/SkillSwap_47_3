@@ -502,6 +502,72 @@
   background: #ffe2e2;
 }
 
+.skills-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: var(--spacing-16px);
+  margin-bottom: var(--spacing-24px);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.skills-title {
+  margin: 0;
+  font-family: var(--font-family-heading);
+  font-size: var(--font-size-h2);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text);
+}
+
+.create-skill-button {
+  flex-shrink: 0;
+  padding: var(--spacing-8px);
+  font-size: inherit;
+  font-weight: var(--font-weight-medium);
+  line-height: var(--line-height-button);
+  cursor: pointer;
+  background: var(--color-accent);
+  border: none;
+  border-radius: var(--radius-sm);
+}
+
+.skills-subtitle {
+  margin: 0 0 var(--spacing-16px) 0;
+  font-family: var(--font-family-heading);
+  font-size: var(--font-size-h3);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text);
+}
+
+.skills-block {
+  padding: var(--spacing-24px);
+  margin-bottom: var(--spacing-32px);
+  background-color: var(--color-surface);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
+}
+
+.skills-empty {
+  margin: 0;
+  font-size: var(--font-size-body);
+  color: var(--color-text-caption);
+}
+
+.skills-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-12px);
+}
+
+/* Адаптивность для мобильных */
+@media (width <= 768px) {
+  .skills-header {
+    flex-direction: column;
+    gap: var(--spacing-16px);
+    align-items: flex-start;
+  }
+}
+
 @media (width <= 1100px) {
   .profile-page {
     grid-template-columns: 1fr;
@@ -510,4 +576,85 @@
   .content {
     grid-template-columns: 1fr;
   }
+}
+
+/* Модалка добавления навыка */
+.modal-add-skill {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-20px);
+  min-width: 300px;
+  max-width: 500px;
+}
+
+.modal-title {
+  margin: 0;
+  font-family: var(--font-family-heading);
+  font-size: var(--font-size-h3);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text);
+}
+
+.skills-to-add-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-12px);
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.skill-to-add-item {
+  padding: var(--spacing-12px) var(--spacing-16px);
+  font-family: var(--font-family-body);
+  font-size: var(--font-size-body);
+  text-align: left;
+  cursor: pointer;
+  background-color: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  transition: var(--transition-default);
+}
+
+.skill-to-add-item:hover {
+  background-color: var(--color-accent-hover);
+  border-color: var(--color-accent-pressed);
+}
+
+.modal-close-button {
+  padding: var(--spacing-12px);
+  font-family: var(--font-family-body);
+  font-size: var(--font-size-body);
+  cursor: pointer;
+  background-color: var(--color-disabled);
+  border: none;
+  border-radius: var(--radius-sm);
+  transition: var(--transition-default);
+}
+
+.modal-close-button:hover {
+  color: var(--color-surface);
+  background-color: var(--color-text-caption);
+}
+
+.skills-empty-modal {
+  padding: var(--spacing-20px);
+  color: var(--color-text-caption);
+  text-align: center;
+}
+
+/* Кнопка добавления навыка в блоке "Хочет научиться" */
+.add-skill-button {
+  display: inline;
+  padding: var(--spacing-8px) var(--spacing-16px);
+  font-size: var(--font-size-body);
+  cursor: pointer;
+  background-color: var(--color-accent);
+  border: none;
+  border-radius: var(--radius-sm);
+  transition: var(--transition-default);
+}
+
+.add-skill-button:hover {
+  background-color: var(--color-accent-hover);
+  transform: translateY(-1px);
 }

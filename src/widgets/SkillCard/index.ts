@@ -1,2 +1,2 @@
 // src/widgets/SkillCard/index.ts
-export { SkillCard } from './SkillCard';
+export { CatalogCard as SkillCard } from '../CatalogCard/CatalogCard';

@@ -1,6 +1,6 @@
 // src/pages/RegisterPage3/Step3Form.tsx
 import { useEffect, useState } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { LoginHeader } from '../LoginPage/LoginHeader';
 import styles from './Step3Form.module.css';
 import schoolBoardImage from './school-board.png';
@@ -8,7 +8,7 @@ import {
   fetchCategories,
   fetchSubcategories,
 } from '../../api/endpoints/skillsApi';
-import type { Subcategory } from '../../entities/skill/model/types';
+import type { Subcategory, SkillTeach } from '../../entities/skill/model/types';
 import { registerMockUser } from '../../features/auth/api/registerMockUser';
 import {
   clearRegisterDraft,
@@ -17,46 +17,92 @@ import {
 } from '../../features/auth/lib/registerDraft';
 import { useAuth } from '../../shared/hooks/useAuth';
 import { resolvePostAuthRedirect } from '../../app/types/routes';
-// Добавляем импорт валидации
 import {
   validateSkillForm,
   isFormValid,
   type ValidationErrors,
 } from '../../features/validation/skillFormValidation';
+import { updateUserInMockDb, getUserById } from '../../api/endpoints/usersApi';
 
-function Step3Form() {
-  const { login } = useAuth();
+const MAX_TITLE_LENGTH = 50;
+const MAX_DESCRIPTION_LENGTH = 500;
+
+interface Step3FormProps {
+  isEditMode?: boolean;
+  editSkillId?: string;
+}
+
+function Step3Form({ isEditMode = false, editSkillId }: Step3FormProps) {
+  const { login, user: currentUser, updateUser } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
+  const params = useParams<{ skillId?: string }>();
+
+  // Определяем режим: редактирование или создание
+  const isEditing = isEditMode || !!params.skillId;
+  const skillIdToEdit = editSkillId || params.skillId;
+
   const [draft] = useState(() => readRegisterDraft());
 
   const [skillName, setSkillName] = useState('');
   const [category, setCategory] = useState('');
   const [subcategory, setSubcategory] = useState('');
   const [description, setDescription] = useState('');
+  const [imageUrl, setImageUrl] = useState('');
   const [categories, setCategories] = useState<
-    Array<{ id: string; name: string }>
+    Array<{ id: string; name: string; icon: string }>
   >([]);
   const [subcategories, setSubcategories] = useState<Subcategory[]>([]);
   const [submitError, setSubmitError] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
 
-  // Добавляем состояние для ошибок валидации
   const [validationErrors, setValidationErrors] = useState<ValidationErrors>(
     {},
   );
   const [touched, setTouched] = useState<Record<string, boolean>>({});
 
+  // Загрузка существующего навыка при редактировании
   useEffect(() => {
-    if (!draft?.email || !draft?.password) {
+    const loadSkillForEdit = async () => {
+      if (!isEditing || !skillIdToEdit || !currentUser) return;
+
+      // Ищем навык в массиве skillCanTeach
+      const skill = currentUser.skillCanTeach?.find(
+        (s) => s.id === skillIdToEdit,
+      );
+      if (skill) {
+        setSkillName(skill.name);
+        setDescription(skill.description || '');
+        setCategory(skill.categoryId);
+        setSubcategory(skill.id);
+
+        // Загружаем изображение из пользователя, если есть
+        const skillImage = currentUser.images?.find((img) =>
+          img.includes(skillIdToEdit),
+        );
+        if (skillImage) setImageUrl(skillImage);
+      }
+    };
+
+    loadSkillForEdit();
+  }, [isEditing, skillIdToEdit, currentUser]);
+
+  // Для нового пользователя — из черновика
+  useEffect(() => {
+    if (!isEditing && draft?.email && !draft?.password) {
       navigate('/register', { replace: true, state: location.state });
       return;
     }
 
-    setDescription(draft.about ?? '');
-    setSkillName(draft.skillCanTeach?.name ?? '');
-    setCategory(draft.skillCanTeach?.categoryId ?? '');
-    setSubcategory(draft.skillCanTeach?.id ?? '');
-  }, [draft, navigate, location.state]);
+    if (!isEditing) {
+      setDescription(draft?.about ?? '');
+      // Черновик может содержать skillCanTeach как массив
+      const draftSkill = draft?.skillCanTeach?.[0];
+      setSkillName(draftSkill?.name ?? '');
+      setCategory(draftSkill?.categoryId ?? '');
+      setSubcategory(draftSkill?.id ?? '');
+    }
+  }, [draft, navigate, location.state, isEditing]);
 
   useEffect(() => {
     const loadOptions = async () => {
@@ -75,7 +121,6 @@ function Step3Form() {
     });
   }, []);
 
-  // Добавляем валидацию при изменении полей
   useEffect(() => {
     const errors = validateSkillForm({
       skillName,
@@ -90,11 +135,16 @@ function Step3Form() {
     setTouched((prev) => ({ ...prev, [field]: true }));
   };
 
+  // Получаем выбранную подкатегорию
+  const selectedSubcategory = subcategories.find(
+    (item) => item.id === subcategory,
+  );
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSubmitError('');
+    setIsLoading(true);
 
-    // Отмечаем все поля как touched
     setTouched({
       skillName: true,
       description: true,
@@ -102,7 +152,6 @@ function Step3Form() {
       subcategory: true,
     });
 
-    // Проверяем валидацию
     const errors = validateSkillForm({
       skillName,
       description,
@@ -112,77 +161,133 @@ function Step3Form() {
     setValidationErrors(errors);
 
     if (!isFormValid(errors)) {
-      return; // Блокируем submit при наличии ошибок
-    }
-
-    if (!draft?.email || !draft?.password) {
-      navigate('/register', { replace: true, state: location.state });
+      setIsLoading(false);
       return;
     }
 
-    const selectedSubcategory = subcategories.find(
-      (item) => item.id === subcategory,
-    );
-    const teachSkill = selectedSubcategory
-      ? {
-          id: selectedSubcategory.id,
-          categoryId: selectedSubcategory.categoryId,
-          name: skillName.trim() || selectedSubcategory.name,
-          description: description.trim() || 'Пока не заполнено',
-        }
-      : undefined;
+    const newSkill: SkillTeach = {
+      id: subcategory,
+      categoryId: category,
+      name: skillName.trim() || selectedSubcategory?.name || '',
+      description: description.trim() || 'Пока не заполнено',
+      length: 0,
+    };
 
-    updateRegisterDraft({
-      skillCanTeach: teachSkill,
-      about: description.trim() || undefined,
-    });
+    // РЕЖИМ РЕДАКТИРОВАНИЯ
+    if (isEditing && currentUser && skillIdToEdit) {
+      const updatedSkills = currentUser.skillCanTeach?.map((skill) =>
+        skill.id === skillIdToEdit ? newSkill : skill,
+      ) || [newSkill];
 
-    const result = await registerMockUser({
-      email: draft.email,
-      password: draft.password,
-      name: draft.name,
-      birthDate: draft.birthDate,
-      gender: draft.gender,
-      city: draft.city,
-      skillToLearnId: draft.skillToLearnId,
-      skillCanTeach: teachSkill,
-      about: description.trim() || undefined,
-    });
+      await updateUserInMockDb(currentUser.id, {
+        skillCanTeach: updatedSkills,
+      });
+      updateUser({ ...currentUser, skillCanTeach: updatedSkills });
 
-    if (!result.ok) {
-      setSubmitError('Email уже используется');
+      navigate(`/skill/${newSkill.id}/${currentUser.id}`);
+      setIsLoading(false);
       return;
     }
 
-    const isLoggedIn = await login(draft.email, draft.password);
-    if (!isLoggedIn) {
-      setSubmitError('Не удалось выполнить автологин после регистрации');
+    // РЕЖИМ СОЗДАНИЯ (новый пользователь при регистрации)
+    if (!isEditing && draft?.email && draft?.password) {
+      // Для регистрации передаём skillCanTeach как ОДИН ОБЪЕКТ (не массив)
+      // так как registerMockUser ожидает SkillTeach | undefined
+      const singleSkill: SkillTeach = {
+        id: subcategory,
+        categoryId: category,
+        name: skillName.trim() || selectedSubcategory?.name || '',
+        description: description.trim() || 'Пока не заполнено',
+        length: 0,
+      };
+
+      // Для черновика сохраняем как массив
+      updateRegisterDraft({
+        skillCanTeach: [singleSkill],
+        about: description.trim() || undefined,
+      });
+
+      const result = await registerMockUser({
+        email: draft.email,
+        password: draft.password,
+        name: draft.name,
+        birthDate: draft.birthDate,
+        gender: draft.gender,
+        city: draft.city,
+        skillToLearnId: draft.skillToLearnId,
+        skillCanTeach: [singleSkill],
+        about: description.trim() || undefined,
+      });
+
+      if (!result.ok) {
+        setSubmitError('Email уже используется');
+        setIsLoading(false);
+        return;
+      }
+
+      const isLoggedIn = await login(draft.email, draft.password);
+      if (!isLoggedIn) {
+        setSubmitError('Не удалось выполнить автологин после регистрации');
+        setIsLoading(false);
+        return;
+      }
+
+      clearRegisterDraft();
+      navigate(
+        resolvePostAuthRedirect(
+          (location.state as { from?: { pathname: string } } | null)?.from
+            ?.pathname,
+        ),
+        { replace: true },
+      );
+      setIsLoading(false);
       return;
     }
 
-    clearRegisterDraft();
-    navigate(
-      resolvePostAuthRedirect(
-        (location.state as { from?: { pathname: string } } | null)?.from
-          ?.pathname,
-      ),
-      { replace: true },
-    );
+    // РЕЖИМ СОЗДАНИЯ (авторизованный пользователь добавляет новый навык)
+    if (currentUser) {
+      const existingSkills = currentUser.skillCanTeach || [];
+      const updatedSkills = [...existingSkills, newSkill];
+
+      const success = await updateUserInMockDb(currentUser.id, {
+        skillCanTeach: updatedSkills,
+        ...(imageUrl
+          ? { images: [...(currentUser.images || []), imageUrl] }
+          : {}),
+      });
+
+      if (success) {
+        // Обновляем пользователя в контексте
+        const updatedUser = await getUserById(currentUser.id);
+        if (updatedUser) updateUser(updatedUser);
+
+        navigate(`/skill/${newSkill.id}/${currentUser.id}`);
+      } else {
+        setSubmitError('Не удалось создать навык');
+      }
+    }
+
+    setIsLoading(false);
   };
 
   const handleBack = () => {
-    const selectedSubcategory = subcategories.find(
-      (item) => item.id === subcategory,
-    );
+    if (isEditing) {
+      navigate('/profile?tab=skills');
+      return;
+    }
 
+    // Для черновика сохраняем как массив с обязательным полем length
     updateRegisterDraft({
       skillCanTeach: selectedSubcategory
-        ? {
-            id: selectedSubcategory.id,
-            categoryId: selectedSubcategory.categoryId,
-            name: skillName.trim() || selectedSubcategory.name,
-            description: description.trim() || 'Пока не заполнено',
-          }
+        ? [
+            {
+              id: selectedSubcategory.id,
+              categoryId: selectedSubcategory.categoryId,
+              name: skillName.trim() || selectedSubcategory.name,
+              description: description.trim() || 'Пока не заполнено',
+              length: 0,
+            },
+          ]
         : undefined,
       about: description.trim() || undefined,
     });
@@ -196,21 +301,29 @@ function Step3Form() {
     (item) => item.categoryId === category,
   );
 
-  // Проверяем, заблокирован ли submit
-  const isSubmitDisabled = !isFormValid(validationErrors);
+  const isSubmitDisabled = !isFormValid(validationErrors) || isLoading;
+
+  // Функция для получения текста кнопки (без вложенного тернарника)
+  const getButtonText = () => {
+    if (isLoading) return 'Сохранение...';
+    if (isEditing) return 'Сохранить изменения';
+    return 'Продолжить';
+  };
 
   return (
     <>
       <LoginHeader />
       <div className={styles.container}>
-        <div className={styles['steps-indicator']}>
-          <div className={styles['steps-text']}>Шаг 3 из 3</div>
-          <div className={styles['steps-bar']}>
-            <span className={`${styles['step-dot']} ${styles.completed}`} />
-            <span className={`${styles['step-dot']} ${styles.completed}`} />
-            <span className={`${styles['step-dot']} ${styles.active}`} />
+        {!isEditing && (
+          <div className={styles['steps-indicator']}>
+            <div className={styles['steps-text']}>Шаг 3 из 3</div>
+            <div className={styles['steps-bar']}>
+              <span className={`${styles['step-dot']} ${styles.completed}`} />
+              <span className={`${styles['step-dot']} ${styles.completed}`} />
+              <span className={`${styles['step-dot']} ${styles.active}`} />
+            </div>
           </div>
-        </div>
+        )}
 
         <div className={styles.content}>
           <div className={styles['form-column']}>
@@ -228,9 +341,10 @@ function Step3Form() {
                       : ''
                   }`}
                   placeholder="Введите название вашего навыка"
+                  maxLength={MAX_TITLE_LENGTH}
                 />
                 <div className={styles['char-counter']}>
-                  {skillName.length}/50
+                  {skillName.length}/{MAX_TITLE_LENGTH}
                 </div>
                 {touched.skillName && validationErrors.skillName && (
                   <div className={styles['error-message']}>
@@ -257,7 +371,7 @@ function Step3Form() {
                   <option value="">Выберите категорию</option>
                   {categories.map((categoryOption) => (
                     <option key={categoryOption.id} value={categoryOption.id}>
-                      {categoryOption.name}
+                      {categoryOption.icon} {categoryOption.name}
                     </option>
                   ))}
                 </select>
@@ -279,8 +393,13 @@ function Step3Form() {
                       ? styles['input-error']
                       : ''
                   }`}
+                  disabled={!category}
                 >
-                  <option value="">Выберите подкатегорию</option>
+                  <option value="">
+                    {category
+                      ? 'Выберите подкатегорию'
+                      : 'Сначала выберите категорию'}
+                  </option>
                   {filteredSubcategories.map((subcategoryOption) => (
                     <option
                       key={subcategoryOption.id}
@@ -310,9 +429,10 @@ function Step3Form() {
                   }`}
                   placeholder="Коротко опишите, чему можете научить"
                   rows={4}
+                  maxLength={MAX_DESCRIPTION_LENGTH}
                 />
                 <div className={styles['char-counter']}>
-                  {description.length}/500
+                  {description.length}/{MAX_DESCRIPTION_LENGTH}
                 </div>
                 {touched.description && validationErrors.description && (
                   <div className={styles['error-message']}>
@@ -321,19 +441,18 @@ function Step3Form() {
                 )}
               </div>
 
-              <div className={styles['upload-area']}>
-                <div className={styles['upload-container']}>
-                  <div className={styles['upload-text']}>
-                    Перетащите или выберите изображения навыка
-                  </div>
-                  <div className={styles['upload-button']}>
-                    <img
-                      src="/src/pages/RegisterPage3/gallery-add.png"
-                      alt="Add"
-                      className={styles['upload-icon']}
-                    />
-                    <span>Выбрать изображения</span>
-                  </div>
+              {/* Поле для URL изображения (опционально) */}
+              <div className={styles.field}>
+                <div className={styles.label}>Изображение навыка</div>
+                <input
+                  type="text"
+                  value={imageUrl}
+                  onChange={(e) => setImageUrl(e.target.value)}
+                  className={styles.input}
+                  placeholder="URL изображения (опционально)"
+                />
+                <div className={styles['char-counter']}>
+                  Добавьте ссылку на изображение
                 </div>
               </div>
 
@@ -346,6 +465,7 @@ function Step3Form() {
                   type="button"
                   className={styles['button-secondary']}
                   onClick={handleBack}
+                  disabled={isLoading}
                 >
                   Назад
                 </button>
@@ -354,7 +474,7 @@ function Step3Form() {
                   className={styles['button-primary']}
                   disabled={isSubmitDisabled}
                 >
-                  Продолжить
+                  {getButtonText()}
                 </button>
               </div>
             </form>
@@ -368,11 +488,14 @@ function Step3Form() {
             />
             <div className={styles['text-block']}>
               <h2 className={styles['welcome-title']}>
-                Укажите, чем вы готовы поделиться
+                {isEditing
+                  ? 'Редактирование навыка'
+                  : 'Укажите, чем вы готовы поделиться'}
               </h2>
               <p className={styles['welcome-text']}>
-                Так другие люди смогут увидеть ваши предложения и предложить вам
-                обмен!
+                {isEditing
+                  ? 'Измените информацию о вашем навыке'
+                  : 'Так другие люди смогут увидеть ваши предложения и предложить вам обмен!'}
               </p>
             </div>
           </div>

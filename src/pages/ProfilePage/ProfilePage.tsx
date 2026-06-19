@@ -3,17 +3,21 @@ import { useState, useEffect, useCallback } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../shared/hooks/useAuth';
 import { fetchCities } from '../../api/endpoints/citiesApi';
-import { fetchSubcategories } from '../../api/endpoints/skillsApi';
+import {
+  fetchSubcategories,
+  deleteSkillFromMockDb,
+} from '../../api/endpoints/skillsApi';
 import {
   getAllUsers,
+  updateUserInMockDb,
   updateUserProfileInMockDb,
 } from '../../api/endpoints/usersApi';
 import { Avatar } from '../../shared/ui/Avatar';
 import TagUI from '../../shared/ui/Tag/tagUi';
-import { getCategoryVariant } from '../../widgets/SkillCard/SkillCard';
 import { useExchangeRequest } from '../../features/requests/hooks/useExchangeRequest';
 import { useFavoriteUsers } from '../../features/favorites/hooks/useFavoriteUsers';
 import { CatalogCard } from '../../widgets/CatalogCard';
+import { getCategoryVariant } from '../../widgets/CatalogCard/CatalogCard';
 import type {
   ExchangeRequest,
   RequestStatus,
@@ -27,6 +31,9 @@ import editIcon from '../../assets/images/edit.png';
 import calendarIcon from '../../assets/images/calendar.svg';
 import chevronDownIcon from '../../assets/images/chevron-down.svg';
 import styles from './ProfilePage.module.css';
+import { SkillName } from '../../shared/ui/SkillName/SkillName';
+import Modal from '../../shared/ui/Modal/Modal';
+import type { Subcategory } from '../../entities/skill/model/types';
 
 const profileTabs = [
   { key: 'requests', label: 'Заявки', icon: requestIcon },
@@ -109,7 +116,7 @@ export default function ProfilePage() {
     [],
   );
   const [userNameById, setUserNameById] = useState<Record<string, string>>({});
-  const [userSkillById, setUserSkillById] = useState<Record<string, string>>(
+  const [userSkillById, setUserSkillById] = useState<Record<string, string[]>>(
     {},
   );
   const [skillNameById, setSkillNameById] = useState<Record<string, string>>(
@@ -118,6 +125,13 @@ export default function ProfilePage() {
   const [requestFeedback, setRequestFeedback] = useState<FeedbackState | null>(
     null,
   );
+
+  // State for "add skill to learn" modal
+  const [isAddSkillModalOpen, setIsAddSkillModalOpen] = useState(false);
+  const [availableSkillsToLearn, setAvailableSkillsToLearn] = useState<
+    Subcategory[]
+  >([]);
+
   const skillsToLearn = user?.skills?.slice(0, 10) || [];
 
   useEffect(() => {
@@ -138,6 +152,17 @@ export default function ProfilePage() {
       setAbout(user.about ?? '');
     }
   }, [user]);
+
+  // Load available skills for the modal when on skills tab
+  useEffect(() => {
+    const loadAvailableSkills = async () => {
+      if (activeTab !== 'skills' || !user) return;
+      const subs = await fetchSubcategories();
+      const existingIds = new Set(user.skills || []);
+      setAvailableSkillsToLearn(subs.filter((s) => !existingIds.has(s.id)));
+    };
+    loadAvailableSkills();
+  }, [activeTab, user]);
 
   useEffect(() => {
     const params = new URLSearchParams(location.search);
@@ -160,11 +185,13 @@ export default function ProfilePage() {
       ]);
 
       const nextUserNameById: Record<string, string> = {};
-      const nextUserSkillById: Record<string, string> = {};
+      const nextUserSkillById: Record<string, string[]> = {};
       users.forEach((item) => {
         nextUserNameById[item.id] = item.name;
-        if (item.skillCanTeach?.id) {
-          nextUserSkillById[item.id] = item.skillCanTeach.id;
+        if (item.skillCanTeach && item.skillCanTeach.length > 0) {
+          nextUserSkillById[item.id] = item.skillCanTeach.map(
+            (skill) => skill.id,
+          );
         }
       });
 
@@ -302,6 +329,72 @@ export default function ProfilePage() {
     refreshRequests();
   };
 
+  // Удаление навыка (которым может научить)
+  const handleDeleteSkill = async (skillId?: string) => {
+    if (!skillId || !user) return;
+
+    if (window.confirm('Вы уверены, что хотите удалить этот навык?')) {
+      try {
+        await deleteSkillFromMockDb(skillId);
+
+        const updatedSkills =
+          user.skillCanTeach?.filter((skill) => skill.id !== skillId) || [];
+
+        await updateUserInMockDb(user.id, { skillCanTeach: updatedSkills });
+
+        const updatedUser = {
+          ...user,
+          skillCanTeach: updatedSkills,
+        };
+        updateUser(updatedUser);
+
+        alert('Навык удалён');
+      } catch {
+        alert('Ошибка при удалении навыка');
+      }
+    }
+  };
+
+  // Удаление навыка из списка "хочет научиться"
+  const handleRemoveFromWantsToLearn = async (skillId: string) => {
+    if (!user) return;
+
+    const updatedSkills = user.skills?.filter((id) => id !== skillId) || [];
+
+    try {
+      await updateUserInMockDb(user.id, { skills: updatedSkills });
+      updateUser({ ...user, skills: updatedSkills });
+      alert('Навык удалён из списка');
+
+      // Обновляем доступные навыки для модалки
+      const subs = await fetchSubcategories();
+      const existingIds = new Set(updatedSkills);
+      setAvailableSkillsToLearn(subs.filter((s) => !existingIds.has(s.id)));
+    } catch {
+      alert('Ошибка при удалении навыка');
+    }
+  };
+
+  // Добавление навыка в "Хочу научиться"
+  const handleAddToWantsToLearn = async (skillId: string) => {
+    if (!user) return;
+
+    const updatedSkills = [...(user.skills || []), skillId];
+
+    try {
+      await updateUserInMockDb(user.id, { skills: updatedSkills });
+      updateUser({ ...user, skills: updatedSkills });
+      setIsAddSkillModalOpen(false);
+
+      // Обновляем доступные навыки
+      const subs = await fetchSubcategories();
+      const existingIds = new Set(updatedSkills);
+      setAvailableSkillsToLearn(subs.filter((s) => !existingIds.has(s.id)));
+    } catch {
+      alert('Ошибка при добавлении навыка');
+    }
+  };
+
   const renderRequestCard = (
     request: ExchangeRequest,
     currentUserId: string,
@@ -311,8 +404,8 @@ export default function ProfilePage() {
     const counterpartyId = isIncoming ? request.fromUserId : request.toUserId;
     const counterpartyName = userNameById[counterpartyId] || counterpartyId;
     const skillName = skillNameById[request.skillId] || request.skillId;
-    const counterpartySkillId =
-      userSkillById[counterpartyId] || request.skillId;
+    const counterpartySkills = userSkillById[counterpartyId] || [];
+    const counterpartySkillId = counterpartySkills[0] || request.skillId;
     const counterpartyLink = `/skill/${counterpartySkillId}/${counterpartyId}`;
     const isPendingOutgoing = isOutgoing && request.status === 'pending';
 
@@ -576,32 +669,126 @@ export default function ProfilePage() {
       case 'skills':
         return (
           <div className={styles['skills-section']}>
+            <div className={styles['skills-header']}>
+              <h2 className={styles['skills-title']}>Мои навыки</h2>
+              <button
+                type="button"
+                className={styles['create-skill-button']}
+                onClick={() => navigate('/create')}
+              >
+                + Создать навык
+              </button>
+            </div>
+
             <div className={styles['skills-block']}>
-              <h2 className={styles['skills-title']}>Может научить</h2>
+              <div className={styles['skills-block-header']}>
+                <h3 className={styles['skills-subtitle']}>Может научить</h3>
+              </div>
               <div className={styles['skills-list']}>
-                {user.skillCanTeach ? (
-                  <TagUI
-                    variant={getCategoryVariant(user.skillCanTeach.categoryId)}
-                  >
-                    {user.skillCanTeach.name}
-                  </TagUI>
+                {user.skillCanTeach && user.skillCanTeach.length > 0 ? (
+                  user.skillCanTeach.map((skill) => (
+                    <div key={skill.id} className={styles['skill-item']}>
+                      <TagUI variant={getCategoryVariant(skill.categoryId)}>
+                        {skill.name}
+                      </TagUI>
+                      <div className={styles['skills-actions']}>
+                        <button
+                          type="button"
+                          className={styles['skill-edit-btn']}
+                          onClick={() => navigate(`/skill/${skill.id}/edit`)}
+                          aria-label="Редактировать навык"
+                        >
+                          <img src={editIcon} alt="Редактировать" />
+                        </button>
+                        <button
+                          type="button"
+                          className={styles['skill-delete-btn']}
+                          onClick={() => handleDeleteSkill(skill.id)}
+                          aria-label="Удалить навык"
+                        >
+                          <svg
+                            width="20"
+                            height="20"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                          >
+                            <path
+                              d="M4 7H20"
+                              stroke="currentColor"
+                              strokeWidth="2"
+                              strokeLinecap="round"
+                            />
+                            <path
+                              d="M10 11V16"
+                              stroke="currentColor"
+                              strokeWidth="2"
+                              strokeLinecap="round"
+                            />
+                            <path
+                              d="M14 11V16"
+                              stroke="currentColor"
+                              strokeWidth="2"
+                              strokeLinecap="round"
+                            />
+                            <path
+                              d="M5 7L6 19C6 20.1046 6.89543 21 8 21H16C17.1046 21 18 20.1046 18 19L19 7"
+                              stroke="currentColor"
+                              strokeWidth="2"
+                              strokeLinecap="round"
+                            />
+                            <path
+                              d="M9 7V4C9 3.44772 9.44772 3 10 3H14C14.5523 3 15 3.44772 15 4V7"
+                              stroke="currentColor"
+                              strokeWidth="2"
+                              strokeLinecap="round"
+                            />
+                          </svg>
+                        </button>
+                      </div>
+                    </div>
+                  ))
                 ) : (
-                  <p className={styles['skills-empty']}>Не указано</p>
+                  <p className={styles['skills-empty']}>
+                    Вы ещё не добавили навыки, которым можете научить
+                  </p>
                 )}
               </div>
             </div>
 
+            {/* Блок "Хочет научиться" */}
             <div className={styles['skills-block']}>
-              <h2 className={styles['skills-title']}>Хочет научиться</h2>
+              <div className={styles['skills-block-header']}>
+                <h3 className={styles['skills-subtitle']}>Хочет научиться</h3>
+                <button
+                  type="button"
+                  className={styles['add-skill-button']}
+                  onClick={() => setIsAddSkillModalOpen(true)}
+                  aria-label="Добавить навык"
+                >
+                  + Добавить
+                </button>
+              </div>
               <div className={styles['skills-list']}>
                 {skillsToLearn.length > 0 ? (
                   skillsToLearn.map((skillId) => (
-                    <TagUI key={skillId} variant="other">
-                      {skillId}
-                    </TagUI>
+                    <div key={skillId} className={styles['skill-item']}>
+                      <TagUI variant="other">
+                        <SkillName skillId={skillId} />
+                      </TagUI>
+                      <button
+                        type="button"
+                        className={styles['skill-remove-btn']}
+                        onClick={() => handleRemoveFromWantsToLearn(skillId)}
+                        aria-label="Удалить из списка"
+                      >
+                        ×
+                      </button>
+                    </div>
                   ))
                 ) : (
-                  <p className={styles['skills-empty']}>Не указано</p>
+                  <p className={styles['skills-empty']}>
+                    Вы ещё не добавили навыки, которым хотите научиться
+                  </p>
                 )}
               </div>
             </div>
@@ -768,6 +955,41 @@ export default function ProfilePage() {
           <Avatar src={`/avatars/${user.avatar}`} name={user.name} size="lg" />
         </div>
       </div>
+
+      {/* Модалка добавления навыка */}
+      <Modal
+        isOpen={isAddSkillModalOpen}
+        onClose={() => setIsAddSkillModalOpen(false)}
+      >
+        <div className={styles['modal-add-skill']}>
+          <h3 className={styles['modal-title']}>Добавить навык</h3>
+          <div className={styles['skills-to-add-list']}>
+            {availableSkillsToLearn.length > 0 ? (
+              availableSkillsToLearn.map((skill) => (
+                <button
+                  key={skill.id}
+                  type="button"
+                  className={styles['skill-to-add-item']}
+                  onClick={() => handleAddToWantsToLearn(skill.id)}
+                >
+                  {skill.name}
+                </button>
+              ))
+            ) : (
+              <p className={styles['skills-empty-modal']}>
+                Все доступные навыки уже добавлены
+              </p>
+            )}
+          </div>
+          <button
+            type="button"
+            className={styles['modal-close-button']}
+            onClick={() => setIsAddSkillModalOpen(false)}
+          >
+            Закрыть
+          </button>
+        </div>
+      </Modal>
     </div>
   );
 }

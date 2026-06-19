@@ -32,7 +32,11 @@ export function useSkillPage() {
         if (userId) {
           foundUser = await getUserById(userId);
           // Проверяем, что у пользователя действительно есть этот навык
-          if (foundUser?.skillCanTeach?.id !== skillId) {
+          // skillCanTeach теперь массив, проверяем наличие навыка с нужным ID
+          const hasSkill = foundUser?.skillCanTeach?.some(
+            (skill) => skill.id === skillId,
+          );
+          if (!hasSkill) {
             foundUser = null;
           }
         }
@@ -41,7 +45,9 @@ export function useSkillPage() {
         if (!foundUser) {
           const users = await getAllUsers();
           foundUser =
-            users.find((u) => u.skillCanTeach?.id === skillId) || null;
+            users.find((u) =>
+              u.skillCanTeach?.some((skill) => skill.id === skillId),
+            ) || null;
         }
 
         if (!foundUser) {
@@ -66,5 +72,5 @@ export function useSkillPage() {
     loadData();
   }, [skillId, userId]);
 
-  return { user, relatedUsers, loading, error, skillId, userId };
+  return { user, relatedUsers, loading, error, skillId };
 }

@@ -1,3 +1,4 @@
+// src/features/auth/api/registerMockUser.ts
 import type { User } from '../../../entities/user/model/types';
 import type { SkillTeach } from '../../../entities/skill/model/types';
 import {
@@ -14,7 +15,7 @@ type RegisterMockUserInput = {
   gender?: User['gender'];
   city?: string;
   skillToLearnId?: string;
-  skillCanTeach?: SkillTeach;
+  skillCanTeach?: SkillTeach[]; // ← меняем на массив
   about?: string;
 };
 
@@ -77,6 +78,30 @@ function createMockUser({
     emailName.charAt(0).toUpperCase() +
       emailName.slice(1).replace(/[._-]+/g, ' ');
 
+  // Создаём массив навыков, если передан объект (для обратной совместимости)
+  let teachSkills: SkillTeach[] = [];
+  if (skillCanTeach) {
+    if (Array.isArray(skillCanTeach)) {
+      teachSkills = skillCanTeach;
+    } else {
+      // Если передан объект (старая логика), преобразуем в массив
+      teachSkills = [skillCanTeach];
+    }
+  }
+
+  // Если массив пустой, добавляем дефолтный навык
+  if (teachSkills.length === 0) {
+    teachSkills = [
+      {
+        id: 'skill_mock_001',
+        categoryId: '0',
+        name: 'Новый навык',
+        description: 'Пока не заполнено',
+        length: 0,
+      },
+    ];
+  }
+
   return {
     id: `user_mock_${crypto.randomUUID()}`,
     name: displayName,
@@ -90,12 +115,7 @@ function createMockUser({
     createdAt: now.toISOString(),
     favorites: [],
     liked_me: [],
-    skillCanTeach: skillCanTeach || {
-      id: 'skill_mock_001',
-      categoryId: '0',
-      name: 'Новый навык',
-      description: 'Пока не заполнено',
-    },
+    skillCanTeach: teachSkills, // ← теперь массив
     images: [],
     skills: skillToLearnId ? [skillToLearnId] : [],
     about: about || '',

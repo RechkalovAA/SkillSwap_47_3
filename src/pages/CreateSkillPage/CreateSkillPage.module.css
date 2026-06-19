@@ -1,0 +1,297 @@
+/* stylelint-disable CssSyntaxError */
+/* stylelint-disable comment-empty-line-before */
+/* CreateSkillPage.module.css
+.create-skill-page {
+  min-height: 100vh;
+  background-color: var(--color-bg);
+}
+
+.create-skill-container {
+  max-width: 800px;
+  padding: var(--spacing-40px) var(--container-padding);
+  margin: 0 auto;
+}
+
+.create-skill-title {
+  margin: 0 0 var(--spacing-32px) 0;
+  font-family: var(--font-family-heading);
+  font-size: var(--font-size-h1);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text);
+  text-align: center;
+}
+
+.create-skill-form {
+  padding: var(--spacing-32px);
+  background-color: var(--color-surface);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-md);
+}
+
+.form-group {
+  margin-bottom: var(--spacing-24px);
+}
+
+.form-label {
+  display: block;
+  margin-bottom: var(--spacing-8px);
+  font-family: var(--font-family-heading);
+  font-size: var(--font-size-h4);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text);
+}
+
+.form-required {
+  color: var(--color-error);
+}
+
+.form-input,
+.form-textarea,
+.form-select {
+  width: 100%;
+  padding: var(--spacing-12px);
+  font-family: var(--font-family-body);
+  font-size: var(--font-size-body);
+  line-height: var(--line-height-body);
+  color: var(--color-text);
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  transition: var(--transition-default);
+}
+
+.form-input:focus,
+.form-textarea:focus,
+.form-select:focus {
+  outline: none;
+  border-color: var(--color-accent-pressed);
+  box-shadow: 0 0 0 2px var(--color-accent-hover);
+}
+
+.form-input-error {
+  border-color: var(--color-error);
+}
+
+.form-textarea {
+  resize: vertical;
+}
+
+.form-error {
+  margin-top: var(--spacing-4px);
+  font-size: var(--font-size-caption);
+  color: var(--color-error);
+}
+
+.form-hint {
+  margin-top: var(--spacing-4px);
+  font-size: var(--font-size-caption);
+  color: var(--color-text-caption);
+} */
+
+/* Теги */
+/* .tags-input-wrapper {
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+}
+
+.tags-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-8px);
+  align-items: center;
+  padding: var(--spacing-8px);
+}
+
+.tag {
+  display: inline-flex;
+  gap: var(--spacing-4px);
+  align-items: center;
+  padding: var(--spacing-4px) var(--spacing-8px);
+  font-size: var(--font-size-caption);
+  background-color: var(--color-accent-hover);
+  border-radius: var(--radius-sm);
+}
+
+.tag-remove {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  font-size: 14px;
+  color: var(--color-text-caption);
+  cursor: pointer;
+  background: none;
+  border: none;
+  border-radius: var(--radius-full);
+}
+
+.tag-remove:hover {
+  color: var(--color-error);
+}
+
+.tag-input {
+  flex: 1;
+  min-width: 120px;
+  padding: var(--spacing-4px);
+  font-family: var(--font-family-body);
+  font-size: var(--font-size-body);
+  outline: none;
+  border: none;
+} */
+
+/* Кнопки */
+/* .form-actions {
+  display: flex;
+  gap: var(--spacing-16px);
+  justify-content: flex-end;
+  margin-top: var(--spacing-32px);
+}
+
+.form-button-submit,
+.form-button-cancel {
+  padding: var(--spacing-12px) var(--spacing-24px);
+  font-family: var(--font-family-body);
+  font-size: var(--font-size-body);
+  font-weight: var(--font-weight-medium);
+  cursor: pointer;
+  border: none;
+  border-radius: var(--radius-sm);
+  transition: var(--transition-default);
+}
+
+.form-button-submit {
+  color: var(--color-text);
+  background-color: var(--color-accent);
+}
+
+.form-button-submit:hover:not(:disabled) {
+  background-color: var(--color-accent-hover);
+  transform: translateY(-1px);
+}
+
+.form-button-submit:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.form-button-cancel {
+  color: var(--color-text);
+  background-color: var(--color-disabled);
+}
+
+.form-button-cancel:hover {
+  background-color: var(--color-border);
+}
+
+.form-submit-error {
+  padding: var(--spacing-12px);
+  margin-top: var(--spacing-16px);
+  color: var(--color-error);
+  text-align: center;
+  background-color: rgb(191 57 32 / 10%);
+  border-radius: var(--radius-sm);
+}
+
+.create-skill-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 400px;
+  font-size: var(--font-size-h3);
+  color: var(--color-text-caption);
+} */
+
+/* Контейнер для поля ввода тега */
+/* .tags-input-container {
+  margin-bottom: var(--spacing-12px);
+}
+
+.tags-input-field {
+  width: 100%;
+  padding: var(--spacing-12px);
+  font-family: var(--font-family-body);
+  font-size: var(--font-size-body);
+  color: var(--color-text);
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  transition: var(--transition-default);
+}
+
+.tags-input-field:focus {
+  outline: none;
+  border-color: var(--color-accent-pressed);
+  box-shadow: 0 0 0 2px var(--color-accent-hover);
+}
+
+.tags-input-field:disabled {
+  cursor: not-allowed;
+  background-color: var(--color-disabled);
+}
+
+/* Контейнер для списка тегов */
+/* .tags-wrapper {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-8px);
+  min-height: 48px;
+  padding: var(--spacing-8px);
+  background-color: var(--color-bg);
+  border-radius: var(--radius-sm);
+}
+
+.tags-empty {
+  font-size: var(--font-size-caption);
+  color: var(--color-text-caption);
+}
+
+.tag {
+  display: inline-flex;
+  gap: var(--spacing-4px);
+  align-items: center;
+  padding: var(--spacing-4px) var(--spacing-8px);
+  font-size: var(--font-size-caption);
+  background-color: var(--color-accent-hover);
+  border-radius: var(--radius-sm);
+}
+
+.tag-remove {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  font-size: 14px;
+  color: var(--color-text-caption);
+  cursor: pointer;
+  background: none;
+  border: none;
+  border-radius: var(--radius-full);
+}
+
+.tag-remove:hover {
+  color: var(--color-error);
+} */
+
+/* Адаптивность */
+
+/* @media (width <= 768px) {
+  .create-skill-container {
+    padding: var(--spacing-20px);
+  }
+
+  .create-skill-form {
+    padding: var(--spacing-20px);
+  }
+
+  .form-actions {
+    flex-direction: column;
+  }
+
+  .form-button-submit,
+  .form-button-cancel {
+    width: 100%;
+  }
+} */

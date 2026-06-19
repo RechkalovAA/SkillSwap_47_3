@@ -11,7 +11,7 @@ export type RegisterDraft = {
   gender?: User['gender'];
   city?: string;
   skillToLearnId?: string;
-  skillCanTeach?: SkillTeach;
+  skillCanTeach?: SkillTeach[];
   about?: string;
 };
 
